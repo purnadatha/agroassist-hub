@@ -4,6 +4,17 @@ import { Card } from "@/components/ui/card";
 import SellingForm from "@/components/marketplace/SellingForm";
 import BuyingPage from "@/components/marketplace/BuyingPage";
 
+interface Product {
+  id: number;
+  productName: string;
+  category: string;
+  quantity: string;
+  unit: string;
+  price: string;
+  description: string;
+  location: string;
+}
+
 const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
