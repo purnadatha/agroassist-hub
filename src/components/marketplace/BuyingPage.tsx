@@ -12,6 +12,7 @@ interface Product {
   price: string;
   description: string;
   location: string;
+  imageUrl: string;
 }
 
 interface BuyingPageProps {
@@ -21,10 +22,24 @@ interface BuyingPageProps {
 const BuyingPage = ({ products }: BuyingPageProps) => {
   const { toast } = useToast();
 
-  const handleBuy = (productName: string) => {
+  const handleBuy = (product: Product) => {
+    // Create mailto link with product details
+    const subject = encodeURIComponent(`Interest in purchasing ${product.productName}`);
+    const body = encodeURIComponent(
+      `Hello,\n\nI am interested in purchasing the following product:\n\n` +
+      `Product: ${product.productName}\n` +
+      `Category: ${product.category}\n` +
+      `Quantity: ${product.quantity} ${product.unit}\n` +
+      `Price: ₹${product.price}/${product.unit}\n` +
+      `Location: ${product.location}\n\n` +
+      `Please contact me with more details.\n\nThank you!`
+    );
+
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+
     toast({
-      title: "Product Purchase Initiated",
-      description: `You've initiated purchase for ${productName}. The seller will contact you soon.`,
+      title: "Email Client Opened",
+      description: "You can now send an email to the seller about this product.",
     });
   };
 
@@ -41,6 +56,15 @@ const BuyingPage = ({ products }: BuyingPageProps) => {
       {products.map((product) => (
         <Card key={product.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
+            {product.imageUrl && (
+              <div className="w-full h-48 mb-4">
+                <img
+                  src={product.imageUrl}
+                  alt={product.productName}
+                  className="w-full h-full object-cover rounded-md"
+                />
+              </div>
+            )}
             <CardTitle className="text-lg">{product.productName}</CardTitle>
             <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
           </CardHeader>
@@ -60,7 +84,7 @@ const BuyingPage = ({ products }: BuyingPageProps) => {
               </p>
               <Button
                 className="w-full mt-4"
-                onClick={() => handleBuy(product.productName)}
+                onClick={() => handleBuy(product)}
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Buy Now

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 const formSchema = z.object({
   productName: z.string().min(2, "Product name must be at least 2 characters"),
@@ -16,6 +17,7 @@ const formSchema = z.object({
   price: z.string().min(1, "Price is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   location: z.string().min(2, "Location is required"),
+  imageUrl: z.string().optional(),
 });
 
 type SellingFormValues = z.infer<typeof formSchema>;
@@ -26,6 +28,8 @@ interface SellingFormProps {
 
 const SellingForm = ({ onSubmit }: SellingFormProps) => {
   const { toast } = useToast();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const form = useForm<SellingFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,8 +40,22 @@ const SellingForm = ({ onSubmit }: SellingFormProps) => {
       price: "",
       description: "",
       location: "",
+      imageUrl: "",
     },
   });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        form.setValue("imageUrl", base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (values: SellingFormValues) => {
     onSubmit(values);
@@ -46,6 +64,7 @@ const SellingForm = ({ onSubmit }: SellingFormProps) => {
       description: "Your product has been listed in the marketplace.",
     });
     form.reset();
+    setImagePreview(null);
   };
 
   return (
@@ -169,6 +188,30 @@ const SellingForm = ({ onSubmit }: SellingFormProps) => {
               <FormControl>
                 <Input placeholder="Enter your location" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product Image</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="cursor-pointer"
+                />
+              </FormControl>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-md" />
+                </div>
+              )}
               <FormMessage />
             </FormItem>
           )}

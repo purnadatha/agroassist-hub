@@ -13,12 +13,13 @@ interface Product {
   price: string;
   description: string;
   location: string;
+  imageUrl: string;
 }
 
 const Marketplace = () => {
   const [products, setProducts] = useState<Product[]>([]);
 
-  const handleProductSubmit = (product: Product) => {
+  const handleProductSubmit = (product: Omit<Product, 'id'>) => {
     setProducts([...products, { ...product, id: Date.now() }]);
   };
 
