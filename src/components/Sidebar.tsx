@@ -14,7 +14,7 @@ export const Sidebar = () => {
             <Home className="mr-2 h-4 w-4" />
             Dashboard
           </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/marketplace")}>
             <ShoppingBag className="mr-2 h-4 w-4" />
             Marketplace
           </Button>
