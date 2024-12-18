@@ -35,7 +35,8 @@ const BuyingPage = ({ products }: BuyingPageProps) => {
       `Please contact me with more details.\n\nThank you!`
     );
 
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    // Open default email client
+    window.location.href = `mailto:support@agrotrack.com?subject=${subject}&body=${body}`;
 
     toast({
       title: "Email Client Opened",
