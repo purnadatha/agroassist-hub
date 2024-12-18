@@ -25,10 +25,13 @@ export const MobileNav = () => {
           <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/rent-tools")}>
             Rent Tools
           </Button>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/crop-recommendation")}>
+            Crop Recommendation
+          </Button>
           <Button variant="ghost" className="w-full justify-start">
             AI Assistant
           </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/loans")}>
             Loans
           </Button>
           <Button

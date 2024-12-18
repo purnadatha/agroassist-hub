@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
 import RentTools from "./pages/RentTools";
 import Loans from "./pages/Loans";
+import CropRecommendation from "./pages/CropRecommendation";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/rent-tools" element={<RentTools />} />
           <Route path="/loans" element={<Loans />} />
+          <Route path="/crop-recommendation" element={<CropRecommendation />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Tractor, MessageSquare, Landmark, LogOut } from "lucide-react";
+import { Home, ShoppingBag, Tractor, MessageSquare, Landmark, LogOut, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -18,15 +18,19 @@ export const Sidebar = () => {
             <ShoppingBag className="mr-2 h-4 w-4" />
             Marketplace
           </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/rent-tools")}>
             <Tractor className="mr-2 h-4 w-4" />
             Rent Tools
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/crop-recommendation")}>
+            <Sprout className="mr-2 h-4 w-4" />
+            Crop Recommendation
           </Button>
           <Button variant="ghost" className="w-full justify-start">
             <MessageSquare className="mr-2 h-4 w-4" />
             AI Assistant
           </Button>
-          <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/loans")}>
             <Landmark className="mr-2 h-4 w-4" />
             Loans
           </Button>
