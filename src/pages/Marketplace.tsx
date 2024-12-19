@@ -1,29 +1,10 @@
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/ui/back-button";
 import SellingForm from "@/components/marketplace/SellingForm";
 import BuyingPage from "@/components/marketplace/BuyingPage";
 
-interface Product {
-  id: number;
-  productName: string;
-  category: string;
-  quantity: string;
-  unit: string;
-  price: string;
-  description: string;
-  location: string;
-  imageUrl: string;
-}
-
 const Marketplace = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-
-  const handleProductSubmit = (product: Omit<Product, 'id'>) => {
-    setProducts([...products, { ...product, id: Date.now() }]);
-  };
-
   return (
     <div className="flex min-h-screen bg-background">
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -38,12 +19,12 @@ const Marketplace = () => {
           </TabsList>
           <TabsContent value="buy" className="space-y-4">
             <Card className="p-6">
-              <BuyingPage products={products} />
+              <BuyingPage />
             </Card>
           </TabsContent>
           <TabsContent value="sell" className="space-y-4">
             <Card className="p-6">
-              <SellingForm onSubmit={handleProductSubmit} />
+              <SellingForm />
             </Card>
           </TabsContent>
         </Tabs>
