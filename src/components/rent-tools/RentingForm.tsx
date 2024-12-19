@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   toolName: z.string().min(2, "Tool name must be at least 2 characters"),
@@ -25,7 +26,7 @@ interface RentingFormProps {
   onSubmit: (values: RentingFormValues) => void;
 }
 
-const RentingForm = ({ onSubmit }: RentingFormProps) => {
+const RentingForm = () => {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -55,14 +56,38 @@ const RentingForm = ({ onSubmit }: RentingFormProps) => {
     }
   };
 
-  const handleSubmit = (values: RentingFormValues) => {
-    onSubmit(values);
-    toast({
-      title: "Tool listed successfully!",
-      description: "Your tool has been listed for rent.",
-    });
-    form.reset();
-    setImagePreview(null);
+  const handleSubmit = async (values: RentingFormValues) => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { error } = await supabase.from("tools").insert({
+        user_id: userData.user.id,
+        tool_name: values.toolName,
+        category: values.category,
+        rental_duration: values.rentalDuration,
+        price_per_day: values.pricePerDay,
+        description: values.description,
+        location: values.location,
+        image_url: values.imageUrl,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Tool listed successfully!",
+        description: "Your tool has been listed for rent.",
+      });
+      
+      form.reset();
+      setImagePreview(null);
+    } catch (error) {
+      toast({
+        title: "Error listing tool",
+        description: "There was an error listing your tool. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

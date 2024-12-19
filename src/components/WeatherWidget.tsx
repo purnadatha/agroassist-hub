@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cloud, Sun, Thermometer, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WeatherData {
   timelines: {
@@ -19,8 +20,9 @@ export const WeatherWidget = () => {
   const { data: weather, isLoading, error } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
+      const { data: { api_key } } = await supabase.functions.invoke('get-weather-key');
       const response = await fetch(
-        "https://api.tomorrow.io/v4/weather/forecast?location=42.3478,-71.0466&apikey=E7ESD3xqZxR9QJPOLvDRQgntQJGZzPJk"
+        `https://api.tomorrow.io/v4/weather/forecast?location=42.3478,-71.0466&apikey=${api_key}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch weather data");

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   productName: z.string().min(2, "Product name must be at least 2 characters"),
@@ -26,7 +27,7 @@ interface SellingFormProps {
   onSubmit: (values: SellingFormValues) => void;
 }
 
-const SellingForm = ({ onSubmit }: SellingFormProps) => {
+const SellingForm = () => {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -44,27 +45,39 @@ const SellingForm = ({ onSubmit }: SellingFormProps) => {
     },
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setImagePreview(base64String);
-        form.setValue("imageUrl", base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const handleSubmit = async (values: SellingFormValues) => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
 
-  const handleSubmit = (values: SellingFormValues) => {
-    onSubmit(values);
-    toast({
-      title: "Product listed successfully!",
-      description: "Your product has been listed in the marketplace.",
-    });
-    form.reset();
-    setImagePreview(null);
+      const { error } = await supabase.from("products").insert({
+        user_id: userData.user.id,
+        product_name: values.productName,
+        category: values.category,
+        quantity: values.quantity,
+        unit: values.unit,
+        price: values.price,
+        description: values.description,
+        location: values.location,
+        image_url: values.imageUrl,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Product listed successfully!",
+        description: "Your product has been listed in the marketplace.",
+      });
+      
+      form.reset();
+      setImagePreview(null);
+    } catch (error) {
+      toast({
+        title: "Error listing product",
+        description: "There was an error listing your product. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -203,7 +216,18 @@ const SellingForm = ({ onSubmit }: SellingFormProps) => {
                 <Input
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUpload}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const base64String = reader.result as string;
+                        setImagePreview(base64String);
+                        form.setValue("imageUrl", base64String);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                   className="cursor-pointer"
                 />
               </FormControl>

@@ -2,32 +2,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ShoppingCart } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
-  id: number;
-  productName: string;
+  id: string;
+  product_name: string;
   category: string;
   quantity: string;
   unit: string;
   price: string;
   description: string;
   location: string;
-  imageUrl: string;
+  image_url: string;
 }
 
-interface BuyingPageProps {
-  products: Product[];
-}
-
-const BuyingPage = ({ products }: BuyingPageProps) => {
+const BuyingPage = () => {
   const { toast } = useToast();
 
+  const { data: products = [], isLoading, error } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Product[];
+    },
+  });
+
   const handleBuy = (product: Product) => {
-    // Create mailto link with product details
-    const subject = encodeURIComponent(`Interest in purchasing ${product.productName}`);
+    const subject = encodeURIComponent(`Interest in purchasing ${product.product_name}`);
     const body = encodeURIComponent(
       `Hello,\n\nI am interested in purchasing the following product:\n\n` +
-      `Product: ${product.productName}\n` +
+      `Product: ${product.product_name}\n` +
       `Category: ${product.category}\n` +
       `Quantity: ${product.quantity} ${product.unit}\n` +
       `Price: ₹${product.price}/${product.unit}\n` +
@@ -44,12 +54,12 @@ const BuyingPage = ({ products }: BuyingPageProps) => {
     });
   };
 
-  if (products.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-muted-foreground">No products available at the moment.</p>
-      </div>
-    );
+  if (isLoading) {
+    return <div>Loading products...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading products: {error.message}</div>;
   }
 
   return (
@@ -57,16 +67,16 @@ const BuyingPage = ({ products }: BuyingPageProps) => {
       {products.map((product) => (
         <Card key={product.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            {product.imageUrl && (
+            {product.image_url && (
               <div className="w-full h-48 mb-4">
                 <img
-                  src={product.imageUrl}
-                  alt={product.productName}
+                  src={product.image_url}
+                  alt={product.product_name}
                   className="w-full h-full object-cover rounded-md"
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{product.productName}</CardTitle>
+            <CardTitle className="text-lg">{product.product_name}</CardTitle>
             <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
           </CardHeader>
           <CardContent>

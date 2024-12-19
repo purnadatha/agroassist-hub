@@ -2,33 +2,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tractor } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Tool {
-  id: number;
-  toolName: string;
+  id: string;
+  tool_name: string;
   category: string;
-  rentalDuration: string;
-  pricePerDay: string;
+  rental_duration: string;
+  price_per_day: string;
   description: string;
   location: string;
-  imageUrl: string;
+  image_url: string;
 }
 
-interface RentingPageProps {
-  tools: Tool[];
-}
-
-const RentingPage = ({ tools }: RentingPageProps) => {
+const RentingPage = () => {
   const { toast } = useToast();
 
+  const { data: tools = [], isLoading, error } = useQuery({
+    queryKey: ["tools"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tools")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Tool[];
+    },
+  });
+
   const handleRent = (tool: Tool) => {
-    const subject = encodeURIComponent(`Interest in renting ${tool.toolName}`);
+    const subject = encodeURIComponent(`Interest in renting ${tool.tool_name}`);
     const body = encodeURIComponent(
       `Hello,\n\nI am interested in renting the following tool:\n\n` +
-      `Tool: ${tool.toolName}\n` +
+      `Tool: ${tool.tool_name}\n` +
       `Category: ${tool.category}\n` +
-      `Rental Duration: ${tool.rentalDuration} days\n` +
-      `Price: ₹${tool.pricePerDay}/day\n` +
+      `Rental Duration: ${tool.rental_duration} days\n` +
+      `Price: ₹${tool.price_per_day}/day\n` +
       `Location: ${tool.location}\n\n` +
       `Please contact me with more details.\n\nThank you!`
     );
@@ -42,12 +53,12 @@ const RentingPage = ({ tools }: RentingPageProps) => {
     });
   };
 
-  if (tools.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-muted-foreground">No tools available for rent at the moment.</p>
-      </div>
-    );
+  if (isLoading) {
+    return <div>Loading tools...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading tools: {error.message}</div>;
   }
 
   return (
@@ -55,25 +66,25 @@ const RentingPage = ({ tools }: RentingPageProps) => {
       {tools.map((tool) => (
         <Card key={tool.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            {tool.imageUrl && (
+            {tool.image_url && (
               <div className="w-full h-48 mb-4">
                 <img
-                  src={tool.imageUrl}
-                  alt={tool.toolName}
+                  src={tool.image_url}
+                  alt={tool.tool_name}
                   className="w-full h-full object-cover rounded-md"
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{tool.toolName}</CardTitle>
+            <CardTitle className="text-lg">{tool.tool_name}</CardTitle>
             <p className="text-sm text-muted-foreground capitalize">{tool.category}</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm">
-                <span className="font-medium">Duration:</span> {tool.rentalDuration} days
+                <span className="font-medium">Duration:</span> {tool.rental_duration} days
               </p>
               <p className="text-sm">
-                <span className="font-medium">Price:</span> ₹{tool.pricePerDay}/day
+                <span className="font-medium">Price:</span> ₹{tool.price_per_day}/day
               </p>
               <p className="text-sm">
                 <span className="font-medium">Location:</span> {tool.location}
