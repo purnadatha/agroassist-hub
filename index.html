@@ -10,7 +10,8 @@
     <script>
       window.addEventListener('load', async function() {
         try {
-          const response = await fetch('/.netlify/functions/get-chatbase-id');
+          const { supabaseUrl } = window.ENV || {};
+          const response = await fetch(`${supabaseUrl}/functions/v1/get-chatbase-id`);
           const { chatbotId } = await response.json();
           if (!chatbotId) {
             console.error('No chatbot ID found');
