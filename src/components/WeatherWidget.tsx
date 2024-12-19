@@ -20,7 +20,9 @@ export const WeatherWidget = () => {
   const { data: weather, isLoading, error } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
-      const { data: { api_key } } = await supabase.functions.invoke('get-weather-key');
+      const { data: { api_key }, error: keyError } = await supabase.functions.invoke('get-weather-key');
+      if (keyError) throw new Error("Failed to get API key");
+      
       const response = await fetch(
         `https://api.tomorrow.io/v4/weather/forecast?location=42.3478,-71.0466&apikey=${api_key}`
       );

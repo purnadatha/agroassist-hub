@@ -8,20 +8,27 @@
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
     <script>
-      // We'll inject the chatbot ID dynamically
       window.addEventListener('load', async function() {
-        const response = await fetch('/.netlify/functions/get-chatbase-id');
-        const { chatbotId } = await response.json();
-        window.embeddedChatbotConfig = {
-          chatbotId: chatbotId,
-          domain: "www.chatbase.co"
+        try {
+          const response = await fetch('/.netlify/functions/get-chatbase-id');
+          const { chatbotId } = await response.json();
+          if (!chatbotId) {
+            console.error('No chatbot ID found');
+            return;
+          }
+          window.embeddedChatbotConfig = {
+            chatbotId: chatbotId,
+            domain: "www.chatbase.co"
+          }
+          const script = document.createElement('script');
+          script.src = "https://www.chatbase.co/embed.min.js";
+          script.setAttribute('chatbotId', chatbotId);
+          script.setAttribute('domain', 'www.chatbase.co');
+          script.defer = true;
+          document.head.appendChild(script);
+        } catch (error) {
+          console.error('Error loading chatbot:', error);
         }
-        const script = document.createElement('script');
-        script.src = "https://www.chatbase.co/embed.min.js";
-        script.setAttribute('chatbotId', chatbotId);
-        script.setAttribute('domain', 'www.chatbase.co');
-        script.defer = true;
-        document.head.appendChild(script);
       });
     </script>
   </head>
