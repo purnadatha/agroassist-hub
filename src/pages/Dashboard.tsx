@@ -28,6 +28,14 @@ const Dashboard = () => {
     setAppliedSchemes(schemes);
   }, []);
 
+  const openChat = () => {
+    // @ts-ignore - Chatbase types are not available
+    if (window.Chatbase) {
+      // @ts-ignore
+      window.Chatbase.open();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
@@ -60,7 +68,11 @@ const Dashboard = () => {
                   <Tractor className="h-6 w-6 mb-2" />
                   <span>Rent Tools</span>
                 </Button>
-                <Button variant="outline" className="flex flex-col items-center p-4 h-auto">
+                <Button 
+                  variant="outline" 
+                  className="flex flex-col items-center p-4 h-auto"
+                  onClick={openChat}
+                >
                   <MessageSquare className="h-6 w-6 mb-2" />
                   <span>AI Assistant</span>
                 </Button>
@@ -103,6 +115,14 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
+      
+      {/* Fixed Chat Button */}
+      <Button
+        onClick={openChat}
+        className="fixed bottom-4 right-4 rounded-full w-12 h-12 p-0 shadow-lg hover:shadow-xl transition-shadow"
+      >
+        <MessageSquare className="h-6 w-6" />
+      </Button>
     </div>
   );
 };
