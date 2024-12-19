@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     const chatbotId = Deno.env.get('CHATBASE_ID')
-    console.log('Chatbase ID retrieved successfully')
+    console.log('Chatbase ID retrieved:', chatbotId ? 'Successfully' : 'Not found')
     
     return new Response(
       JSON.stringify({ chatbotId }),
