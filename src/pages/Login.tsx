@@ -2,14 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add login logic here
-    navigate("/dashboard");
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!error) {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -24,11 +35,19 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
-              <Input type="email" placeholder="Enter your email" required />
+              <Input 
+                type="email" 
+                name="email"
+                placeholder="Enter your email"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Password</label>
-              <Input type="password" placeholder="Enter your password" required />
+              <Input 
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+              />
             </div>
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
               Login
