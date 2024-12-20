@@ -10,11 +10,14 @@ import { ProductDetails } from "./ProductDetails";
 import { ImageUpload } from "./ImageUpload";
 import { formSchema, type SellingFormValues } from "./types";
 import { uploadFile } from "@/utils/fileUpload";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const SellingForm = () => {
+  useRequireAuth(); // Add this line to enforce authentication
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<SellingFormValues>({
     resolver: zodResolver(formSchema),
@@ -45,8 +48,17 @@ const SellingForm = () => {
 
   const handleSubmit = async (values: SellingFormValues) => {
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      setIsSubmitting(true);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to list products.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       let imageUrl = "";
       if (selectedFile) {
@@ -54,7 +66,7 @@ const SellingForm = () => {
       }
 
       const { error } = await supabase.from("products").insert({
-        user_id: userData.user.id,
+        user_id: session.user.id,
         product_name: values.productName,
         category: values.category,
         quantity: values.quantity,
@@ -82,6 +94,8 @@ const SellingForm = () => {
         description: "There was an error listing your product. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -95,7 +109,9 @@ const SellingForm = () => {
           imagePreview={imagePreview}
           onImageChange={handleImageChange}
         />
-        <Button type="submit" className="w-full">List Product</Button>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Listing Product..." : "List Product"}
+        </Button>
       </form>
     </Form>
   );

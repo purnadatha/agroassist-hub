@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { uploadFile } from "@/utils/fileUpload";
 
 const formSchema = z.object({
   toolName: z.string().min(2, "Tool name must be at least 2 characters"),
@@ -22,13 +24,12 @@ const formSchema = z.object({
 
 type RentingFormValues = z.infer<typeof formSchema>;
 
-interface RentingFormProps {
-  onSubmit: (values: RentingFormValues) => void;
-}
-
 const RentingForm = () => {
+  useRequireAuth(); // Add this line to enforce authentication
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RentingFormValues>({
     resolver: zodResolver(formSchema),
@@ -43,14 +44,14 @@ const RentingForm = () => {
     },
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setImagePreview(base64String);
-        form.setValue("imageUrl", base64String);
       };
       reader.readAsDataURL(file);
     }
@@ -58,18 +59,32 @@ const RentingForm = () => {
 
   const handleSubmit = async (values: RentingFormValues) => {
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      setIsSubmitting(true);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to list tools.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let imageUrl = "";
+      if (selectedFile) {
+        imageUrl = await uploadFile(selectedFile);
+      }
 
       const { error } = await supabase.from("tools").insert({
-        user_id: userData.user.id,
+        user_id: session.user.id,
         tool_name: values.toolName,
         category: values.category,
         rental_duration: values.rentalDuration,
         price_per_day: values.pricePerDay,
         description: values.description,
         location: values.location,
-        image_url: values.imageUrl,
+        image_url: imageUrl,
       });
 
       if (error) throw error;
@@ -81,12 +96,16 @@ const RentingForm = () => {
       
       form.reset();
       setImagePreview(null);
+      setSelectedFile(null);
     } catch (error) {
+      console.error('Error listing tool:', error);
       toast({
         title: "Error listing tool",
         description: "There was an error listing your tool. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
