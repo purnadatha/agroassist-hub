@@ -10,7 +10,11 @@
     <script>
       window.addEventListener('load', async function() {
         try {
-          const response = await fetch('https://ppvpakkqegbnfwmdnzgi.supabase.co/functions/v1/get-chatbase-id');
+          const response = await fetch('https://ppvpakkqegbnfwmdnzgi.supabase.co/functions/v1/get-chatbase-id', {
+            headers: {
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwdnBha2txZWdibmZ3bWRuemdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MDE5NTcsImV4cCI6MjA1MDA3Nzk1N30.BD947WUU6FWFKl-sAryeYfS8jCWP8V_cveXibyNN2bQ'
+            }
+          });
           const { chatbotId } = await response.json();
           if (!chatbotId) {
             console.error('No chatbot ID found');
