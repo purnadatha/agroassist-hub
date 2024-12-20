@@ -10,10 +10,8 @@ import { ProductDetails } from "./ProductDetails";
 import { ImageUpload } from "./ImageUpload";
 import { formSchema, type SellingFormValues } from "./types";
 import { uploadFile } from "@/utils/fileUpload";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const SellingForm = () => {
-  useRequireAuth(); // Add this line to enforce authentication
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -49,16 +47,6 @@ const SellingForm = () => {
   const handleSubmit = async (values: SellingFormValues) => {
     try {
       setIsSubmitting(true);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to list products.",
-          variant: "destructive",
-        });
-        return;
-      }
 
       let imageUrl = "";
       if (selectedFile) {
@@ -66,7 +54,6 @@ const SellingForm = () => {
       }
 
       const { error } = await supabase.from("products").insert({
-        user_id: session.user.id,
         product_name: values.productName,
         category: values.category,
         quantity: values.quantity,
