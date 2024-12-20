@@ -3,9 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -13,12 +15,17 @@ const Login = () => {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (!error) {
+    if (error) {
+      toast({
+        title: "Login failed",
+        description: "Please check your credentials and try again",
+      });
+    } else if (data.user) {
       navigate("/dashboard");
     }
   };
@@ -36,7 +43,7 @@ const Login = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
               <Input 
-                type="email" 
+                type="text"
                 name="email"
                 placeholder="Enter your email"
               />
@@ -49,7 +56,7 @@ const Login = () => {
                 placeholder="Enter your password"
               />
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+            <Button type="submit" className="w-full">
               Login
             </Button>
           </form>
