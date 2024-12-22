@@ -3,7 +3,7 @@ import { WeatherWidget } from "@/components/WeatherWidget";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Tractor, MessageSquare, Landmark } from "lucide-react";
+import { ShoppingBag, Tractor, Landmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -22,19 +22,16 @@ interface AppliedScheme {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [appliedSchemes, setAppliedSchemes] = useState<AppliedScheme[]>([]);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     const schemes = JSON.parse(localStorage.getItem("appliedSchemes") || "[]");
     setAppliedSchemes(schemes);
+    
+    // Get user data from localStorage
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    setUserName(userData.fullName || "User");
   }, []);
-
-  const openChat = () => {
-    // @ts-ignore - Chatbase types are not available
-    if (window.Chatbase) {
-      // @ts-ignore
-      window.Chatbase.open();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -44,7 +41,8 @@ const Dashboard = () => {
           <MobileNav />
         </div>
         <main className="p-4">
-          <h1 className="text-2xl font-bold text-primary mb-6">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-primary mb-1">Dashboard</h1>
+          <p className="text-gray-600 mb-6">Welcome back, {userName}!</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <WeatherWidget />
             <Card>
@@ -67,14 +65,6 @@ const Dashboard = () => {
                 >
                   <Tractor className="h-6 w-6 mb-2" />
                   <span>Rent Tools</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto"
-                  onClick={openChat}
-                >
-                  <MessageSquare className="h-6 w-6 mb-2" />
-                  <span>AI Assistant</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -115,14 +105,6 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
-      
-      {/* Fixed Chat Button */}
-      <Button
-        onClick={openChat}
-        className="fixed bottom-4 right-4 rounded-full w-12 h-12 p-0 shadow-lg hover:shadow-xl transition-shadow"
-      >
-        <MessageSquare className="h-6 w-6" />
-      </Button>
     </div>
   );
 };
