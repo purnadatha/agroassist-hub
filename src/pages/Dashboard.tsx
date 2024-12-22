@@ -3,7 +3,7 @@ import { WeatherWidget } from "@/components/WeatherWidget";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Tractor, Landmark } from "lucide-react";
+import { ShoppingBag, Tractor, Landmark, Sprout } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -52,26 +52,34 @@ const Dashboard = () => {
               <CardContent className="grid grid-cols-2 gap-4">
                 <Button 
                   variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto"
+                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
                   onClick={() => navigate("/marketplace")}
                 >
-                  <ShoppingBag className="h-6 w-6 mb-2" />
+                  <ShoppingBag className="h-6 w-6 mb-2 group-hover:animate-bounce text-primary transition-colors duration-300" />
                   <span>Marketplace</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto"
+                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
                   onClick={() => navigate("/rent-tools")}
                 >
-                  <Tractor className="h-6 w-6 mb-2" />
+                  <Tractor className="h-6 w-6 mb-2 group-hover:animate-pulse text-primary transition-colors duration-300" />
                   <span>Rent Tools</span>
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto"
+                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
+                  onClick={() => navigate("/crop-recommendation")}
+                >
+                  <Sprout className="h-6 w-6 mb-2 group-hover:rotate-12 text-primary transition-all duration-300" />
+                  <span>Crop Guide</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
                   onClick={() => navigate("/loans")}
                 >
-                  <Landmark className="h-6 w-6 mb-2" />
+                  <Landmark className="h-6 w-6 mb-2 group-hover:animate-pulse text-primary transition-colors duration-300" />
                   <span>Loans</span>
                 </Button>
               </CardContent>
