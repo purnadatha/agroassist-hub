@@ -24,7 +24,7 @@ export const WeatherWidget = () => {
       if (keyError) throw new Error("Failed to get API key");
       
       const response = await fetch(
-        `https://api.tomorrow.io/v4/weather/forecast?location=42.3478,-71.0466&apikey=${api_key}`
+        `https://api.tomorrow.io/v4/weather/forecast?location=42.3478,-71.0466&apikey=${api_key}&units=metric`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch weather data");
@@ -75,10 +75,10 @@ export const WeatherWidget = () => {
             <Thermometer className="h-8 w-8 text-primary" />
             <div>
               <p className="text-2xl font-bold">
-                {Math.round(todayWeather?.temperatureAvg || 0)}°C
+                {todayWeather?.temperatureAvg ? Math.round(todayWeather.temperatureAvg) : 0}°C
               </p>
               <p className="text-sm text-gray-500">
-                Feels like {Math.round(todayWeather?.temperatureApparentAvg || 0)}°C
+                Feels like {todayWeather?.temperatureApparentAvg ? Math.round(todayWeather.temperatureApparentAvg) : 0}°C
               </p>
             </div>
           </div>
@@ -89,7 +89,7 @@ export const WeatherWidget = () => {
                 {todayWeather?.cloudCoverAvg > 50 ? "Cloudy" : "Partly Cloudy"}
               </p>
               <p className="text-sm text-gray-500">
-                {Math.round(todayWeather?.precipitationProbabilityAvg || 0)}% chance of rain
+                {todayWeather?.precipitationProbabilityAvg ? Math.round(todayWeather.precipitationProbabilityAvg) : 0}% chance of rain
               </p>
             </div>
           </div>
