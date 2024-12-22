@@ -8,9 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { uploadFile } from "@/utils/fileUpload";
 
 const formSchema = z.object({
   toolName: z.string().min(2, "Tool name must be at least 2 characters"),
@@ -19,16 +16,13 @@ const formSchema = z.object({
   pricePerDay: z.string().min(1, "Price per day is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   location: z.string().min(2, "Location is required"),
-  imageUrl: z.string().optional(),
 });
 
 type RentingFormValues = z.infer<typeof formSchema>;
 
 const RentingForm = () => {
-  useRequireAuth(); // Add this line to enforce authentication
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RentingFormValues>({
@@ -40,14 +34,12 @@ const RentingForm = () => {
       pricePerDay: "",
       description: "",
       location: "",
-      imageUrl: "",
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
@@ -60,34 +52,19 @@ const RentingForm = () => {
   const handleSubmit = async (values: RentingFormValues) => {
     try {
       setIsSubmitting(true);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      const tool = {
+        id: crypto.randomUUID(),
+        ...values,
+        imageUrl: imagePreview,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Get existing tools from localStorage
+      const existingTools = JSON.parse(localStorage.getItem('tools') || '[]');
       
-      if (sessionError || !session) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to list tools.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      let imageUrl = "";
-      if (selectedFile) {
-        imageUrl = await uploadFile(selectedFile);
-      }
-
-      const { error } = await supabase.from("tools").insert({
-        user_id: session.user.id,
-        tool_name: values.toolName,
-        category: values.category,
-        rental_duration: values.rentalDuration,
-        price_per_day: values.pricePerDay,
-        description: values.description,
-        location: values.location,
-        image_url: imageUrl,
-      });
-
-      if (error) throw error;
+      // Add new tool
+      localStorage.setItem('tools', JSON.stringify([tool, ...existingTools]));
 
       toast({
         title: "Tool listed successfully!",
@@ -96,7 +73,6 @@ const RentingForm = () => {
       
       form.reset();
       setImagePreview(null);
-      setSelectedFile(null);
     } catch (error) {
       console.error('Error listing tool:', error);
       toast({
@@ -209,31 +185,26 @@ const RentingForm = () => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="imageUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tool Image</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="cursor-pointer"
-                />
-              </FormControl>
-              {imagePreview && (
-                <div className="mt-2">
-                  <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-md" />
-                </div>
-              )}
-              <FormMessage />
-            </FormItem>
+        <FormItem>
+          <FormLabel>Tool Image</FormLabel>
+          <FormControl>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="cursor-pointer"
+            />
+          </FormControl>
+          {imagePreview && (
+            <div className="mt-2">
+              <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-md" />
+            </div>
           )}
-        />
+        </FormItem>
 
-        <Button type="submit" className="w-full">List Tool</Button>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Listing Tool..." : "List Tool"}
+        </Button>
       </form>
     </Form>
   );

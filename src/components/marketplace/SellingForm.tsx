@@ -4,17 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { ProductBasicInfo } from "./ProductBasicInfo";
 import { ProductDetails } from "./ProductDetails";
 import { ImageUpload } from "./ImageUpload";
 import { formSchema, type SellingFormValues } from "./types";
-import { uploadFile } from "@/utils/fileUpload";
 
 const SellingForm = () => {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<SellingFormValues>({
@@ -34,7 +31,6 @@ const SellingForm = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
@@ -47,24 +43,19 @@ const SellingForm = () => {
   const handleSubmit = async (values: SellingFormValues) => {
     try {
       setIsSubmitting(true);
+      
+      const product = {
+        id: crypto.randomUUID(),
+        ...values,
+        imageUrl: imagePreview,
+        createdAt: new Date().toISOString(),
+      };
 
-      let imageUrl = "";
-      if (selectedFile) {
-        imageUrl = await uploadFile(selectedFile);
-      }
-
-      const { error } = await supabase.from("products").insert({
-        product_name: values.productName,
-        category: values.category,
-        quantity: values.quantity,
-        unit: values.unit,
-        price: values.price,
-        description: values.description,
-        location: values.location,
-        image_url: imageUrl,
-      });
-
-      if (error) throw error;
+      // Get existing products from localStorage
+      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      
+      // Add new product
+      localStorage.setItem('products', JSON.stringify([product, ...existingProducts]));
 
       toast({
         title: "Product listed successfully!",
@@ -73,7 +64,6 @@ const SellingForm = () => {
       
       form.reset();
       setImagePreview(null);
-      setSelectedFile(null);
     } catch (error) {
       console.error('Error listing product:', error);
       toast({

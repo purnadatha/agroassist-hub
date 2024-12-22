@@ -2,49 +2,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tractor } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 interface Tool {
   id: string;
-  tool_name: string;
+  toolName: string;
   category: string;
-  rental_duration: string;
-  price_per_day: string;
+  rentalDuration: string;
+  pricePerDay: string;
   description: string;
   location: string;
-  image_url: string;
+  imageUrl: string;
 }
 
 const RentingPage = () => {
   const { toast } = useToast();
+  const [tools, setTools] = useState<Tool[]>([]);
 
-  const { data: tools = [], isLoading, error } = useQuery({
-    queryKey: ["tools"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tools")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as Tool[];
-    },
-  });
+  useEffect(() => {
+    const storedTools = JSON.parse(localStorage.getItem('tools') || '[]');
+    setTools(storedTools);
+  }, []);
 
   const handleRent = (tool: Tool) => {
-    const subject = encodeURIComponent(`Interest in renting ${tool.tool_name}`);
+    const subject = encodeURIComponent(`Interest in renting ${tool.toolName}`);
     const body = encodeURIComponent(
       `Hello,\n\nI am interested in renting the following tool:\n\n` +
-      `Tool: ${tool.tool_name}\n` +
+      `Tool: ${tool.toolName}\n` +
       `Category: ${tool.category}\n` +
-      `Rental Duration: ${tool.rental_duration} days\n` +
-      `Price: ₹${tool.price_per_day}/day\n` +
+      `Rental Duration: ${tool.rentalDuration} days\n` +
+      `Price: ₹${tool.pricePerDay}/day\n` +
       `Location: ${tool.location}\n\n` +
       `Please contact me with more details.\n\nThank you!`
     );
 
-    // Open default email client
     window.location.href = `mailto:support@agrotrack.com?subject=${subject}&body=${body}`;
 
     toast({
@@ -53,12 +44,8 @@ const RentingPage = () => {
     });
   };
 
-  if (isLoading) {
-    return <div>Loading tools...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading tools: {error.message}</div>;
+  if (tools.length === 0) {
+    return <div className="text-center p-4">No tools available for rent.</div>;
   }
 
   return (
@@ -66,25 +53,25 @@ const RentingPage = () => {
       {tools.map((tool) => (
         <Card key={tool.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            {tool.image_url && (
+            {tool.imageUrl && (
               <div className="w-full h-48 mb-4">
                 <img
-                  src={tool.image_url}
-                  alt={tool.tool_name}
+                  src={tool.imageUrl}
+                  alt={tool.toolName}
                   className="w-full h-full object-cover rounded-md"
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{tool.tool_name}</CardTitle>
+            <CardTitle className="text-lg">{tool.toolName}</CardTitle>
             <p className="text-sm text-muted-foreground capitalize">{tool.category}</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm">
-                <span className="font-medium">Duration:</span> {tool.rental_duration} days
+                <span className="font-medium">Duration:</span> {tool.rentalDuration} days
               </p>
               <p className="text-sm">
-                <span className="font-medium">Price:</span> ₹{tool.price_per_day}/day
+                <span className="font-medium">Price:</span> ₹{tool.pricePerDay}/day
               </p>
               <p className="text-sm">
                 <span className="font-medium">Location:</span> {tool.location}

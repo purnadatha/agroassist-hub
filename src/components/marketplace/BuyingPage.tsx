@@ -2,42 +2,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ShoppingCart } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 interface Product {
   id: string;
-  product_name: string;
+  productName: string;
   category: string;
   quantity: string;
   unit: string;
   price: string;
   description: string;
   location: string;
-  image_url: string;
+  imageUrl: string;
 }
 
 const BuyingPage = () => {
   const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as Product[];
-    },
-  });
+  useEffect(() => {
+    const storedProducts = JSON.parse(localStorage.getItem('products') || '[]');
+    setProducts(storedProducts);
+  }, []);
 
   const handleBuy = (product: Product) => {
-    const subject = encodeURIComponent(`Interest in purchasing ${product.product_name}`);
+    const subject = encodeURIComponent(`Interest in purchasing ${product.productName}`);
     const body = encodeURIComponent(
       `Hello,\n\nI am interested in purchasing the following product:\n\n` +
-      `Product: ${product.product_name}\n` +
+      `Product: ${product.productName}\n` +
       `Category: ${product.category}\n` +
       `Quantity: ${product.quantity} ${product.unit}\n` +
       `Price: ₹${product.price}/${product.unit}\n` +
@@ -45,7 +37,6 @@ const BuyingPage = () => {
       `Please contact me with more details.\n\nThank you!`
     );
 
-    // Open default email client
     window.location.href = `mailto:support@agrotrack.com?subject=${subject}&body=${body}`;
 
     toast({
@@ -54,12 +45,8 @@ const BuyingPage = () => {
     });
   };
 
-  if (isLoading) {
-    return <div>Loading products...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading products: {error.message}</div>;
+  if (products.length === 0) {
+    return <div className="text-center p-4">No products available.</div>;
   }
 
   return (
@@ -67,16 +54,16 @@ const BuyingPage = () => {
       {products.map((product) => (
         <Card key={product.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            {product.image_url && (
+            {product.imageUrl && (
               <div className="w-full h-48 mb-4">
                 <img
-                  src={product.image_url}
-                  alt={product.product_name}
+                  src={product.imageUrl}
+                  alt={product.productName}
                   className="w-full h-full object-cover rounded-md"
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{product.product_name}</CardTitle>
+            <CardTitle className="text-lg">{product.productName}</CardTitle>
             <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
           </CardHeader>
           <CardContent>
