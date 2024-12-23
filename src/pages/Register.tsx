@@ -3,19 +3,73 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add registration logic here
-    toast({
-      title: "Registration successful!",
-      description: "Please login with your credentials",
-    });
-    navigate("/login");
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const phone = formData.get('phone') as string;
+      const email = formData.get('email') as string;
+      const fullName = formData.get('fullName') as string;
+      const aadhar = formData.get('aadhar') as string;
+      const pan = formData.get('pan') as string;
+
+      // Basic validation
+      if (!phone || !email || !fullName || !aadhar || !pan) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Sign up with phone
+      const { data, error } = await supabase.auth.signUp({
+        phone,
+        email,
+        options: {
+          data: {
+            full_name: fullName,
+            aadhar_number: aadhar,
+            pan_number: pan,
+          }
+        }
+      });
+
+      if (error) {
+        console.error("Registration error:", error);
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registration successful!",
+          description: "Please proceed to login",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Registration error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -30,22 +84,56 @@ const Register = () => {
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Full Name</label>
-              <Input type="text" placeholder="Enter your full name" required />
+              <Input 
+                type="text"
+                name="fullName"
+                placeholder="Enter your full name"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Phone Number</label>
+              <Input 
+                type="tel"
+                name="phone"
+                placeholder="Enter your phone number"
+                required
+                disabled={isLoading}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Email</label>
-              <Input type="email" placeholder="Enter your email" required />
+              <Input 
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+                disabled={isLoading}
+              />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <Input type="password" placeholder="Create a password" required />
+              <label className="text-sm font-medium">Aadhar Number</label>
+              <Input 
+                type="text"
+                name="aadhar"
+                placeholder="Enter your Aadhar number"
+                required
+                disabled={isLoading}
+              />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm Password</label>
-              <Input type="password" placeholder="Confirm your password" required />
+              <label className="text-sm font-medium">PAN Number</label>
+              <Input 
+                type="text"
+                name="pan"
+                placeholder="Enter your PAN number"
+                required
+                disabled={isLoading}
+              />
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-              Register
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Registering..." : "Register"}
             </Button>
             <div className="text-center text-sm">
               Already have an account?{" "}

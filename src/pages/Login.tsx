@@ -5,41 +5,76 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [otp, setOTP] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const formData = new FormData(e.target as HTMLFormElement);
-      const email = formData.get('email') as string;
-      const password = formData.get('password') as string;
-
-      // Basic validation
-      if (!email || !password) {
+      if (!phone) {
         toast({
-          title: "Missing credentials",
-          description: "Please enter both email and password",
+          title: "Missing phone number",
+          description: "Please enter your phone number",
           variant: "destructive",
         });
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
       });
 
       if (error) {
-        console.error("Login error:", error);
+        console.error("OTP send error:", error);
         toast({
-          title: "Login failed",
-          description: "Invalid email or password. Please try again.",
+          title: "Failed to send OTP",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setShowOTP(true);
+        toast({
+          title: "OTP sent",
+          description: "Please check your phone for the verification code",
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token: otp,
+        type: 'sms'
+      });
+
+      if (error) {
+        console.error("OTP verification error:", error);
+        toast({
+          title: "Verification failed",
+          description: "Invalid OTP. Please try again.",
           variant: "destructive",
         });
       } else if (data.user) {
@@ -52,7 +87,7 @@ const Login = () => {
     } catch (error) {
       console.error("Unexpected error:", error);
       toast({
-        title: "Login error",
+        title: "Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -70,31 +105,66 @@ const Login = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
-              <Input 
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                required
+          {!showOTP ? (
+            <form onSubmit={handleSendOTP} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone Number</label>
+                <Input 
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your phone number"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Sending OTP..." : "Send OTP"}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Enter OTP</label>
+                <div className="flex justify-center">
+                  <InputOTP
+                    value={otp}
+                    onChange={setOTP}
+                    maxLength={6}
+                    render={({ slots }) => (
+                      <InputOTPGroup>
+                        {slots.map((slot, index) => (
+                          <InputOTPSlot key={index} {...slot} />
+                        ))}
+                      </InputOTPGroup>
+                    )}
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Verifying..." : "Verify OTP"}
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="w-full"
+                onClick={() => setShowOTP(false)}
                 disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <Input 
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+              >
+                Change Phone Number
+              </Button>
+            </form>
+          )}
+          <div className="mt-4 text-center text-sm">
+            Don't have an account?{" "}
+            <Button
+              variant="link"
+              className="p-0 h-auto font-semibold"
+              onClick={() => navigate("/register")}
+            >
+              Register here
             </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
