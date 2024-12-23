@@ -2,21 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ShoppingCart } from "lucide-react";
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-
-interface Product {
-  id: string;
-  productName: string;
-  category: string;
-  quantity: string;
-  unit: string;
-  price: string;
-  description: string;
-  location: string;
-  imageUrl: string;
-}
+import { Product } from "./types";
 
 const fetchProducts = async () => {
   const { data, error } = await supabase
@@ -49,10 +37,10 @@ const BuyingPage = () => {
   }
 
   const handleBuy = (product: Product) => {
-    const subject = encodeURIComponent(`Interest in purchasing ${product.productName}`);
+    const subject = encodeURIComponent(`Interest in purchasing ${product.product_name}`);
     const body = encodeURIComponent(
       `Hello,\n\nI am interested in purchasing the following product:\n\n` +
-      `Product: ${product.productName}\n` +
+      `Product: ${product.product_name}\n` +
       `Category: ${product.category}\n` +
       `Quantity: ${product.quantity} ${product.unit}\n` +
       `Price: ₹${product.price}/${product.unit}\n` +

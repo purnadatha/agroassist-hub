@@ -12,3 +12,17 @@ export const formSchema = z.object({
 });
 
 export type SellingFormValues = z.infer<typeof formSchema>;
+
+export interface Product {
+  id: string;
+  user_id?: string;
+  product_name: string;
+  category: string;
+  quantity: string;
+  unit: string;
+  price: string;
+  description: string;
+  location: string;
+  image_url: string | null;
+  created_at?: string;
+}
