@@ -15,6 +15,17 @@ const Login = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOTP] = useState("");
 
+  const formatPhoneNumber = (phone: string) => {
+    // Remove any non-digit characters
+    const digits = phone.replace(/\D/g, '');
+    
+    // Assuming Indian numbers, add +91 prefix if not present
+    if (!digits.startsWith('91')) {
+      return `+91${digits}`;
+    }
+    return `+${digits}`;
+  };
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -29,8 +40,11 @@ const Login = () => {
         return;
       }
 
+      const formattedPhone = formatPhoneNumber(phone);
+      console.log("Sending OTP to:", formattedPhone); // Debug log
+
       const { error } = await supabase.auth.signInWithOtp({
-        phone,
+        phone: formattedPhone,
       });
 
       if (error) {
@@ -64,8 +78,9 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      const formattedPhone = formatPhoneNumber(phone);
       const { data, error } = await supabase.auth.verifyOtp({
-        phone,
+        phone: formattedPhone,
         token: otp,
         type: 'sms'
       });
@@ -113,7 +128,7 @@ const Login = () => {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter your phone number"
+                  placeholder="Enter your phone number (e.g., 9876543210)"
                   required
                   disabled={isLoading}
                 />
