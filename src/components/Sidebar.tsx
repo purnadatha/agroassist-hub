@@ -1,6 +1,7 @@
-import { Home, ShoppingBag, Tractor, MessageSquare, Landmark, LogOut, Sprout } from "lucide-react";
+import { Home, ShoppingBag, Tractor, Landmark, LogOut, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -9,10 +10,13 @@ export const Sidebar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white border-r p-4 hidden md:block">
+    <div className="w-64 bg-background border-r p-4 hidden md:block">
       <div className="flex flex-col h-full">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-primary">AgroTrack</h2>
+          <ThemeToggle />
+        </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-bold text-primary mb-4">AgroTrack</h2>
           <Button 
             variant={isActive("/dashboard") ? "default" : "ghost"} 
             className="w-full justify-start" 
