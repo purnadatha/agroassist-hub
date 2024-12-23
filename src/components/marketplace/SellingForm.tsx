@@ -8,9 +8,12 @@ import { ProductBasicInfo } from "./ProductBasicInfo";
 import { ProductDetails } from "./ProductDetails";
 import { ImageUpload } from "./ImageUpload";
 import { formSchema, type SellingFormValues } from "./types";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const SellingForm = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,19 +46,45 @@ const SellingForm = () => {
   const handleSubmit = async (values: SellingFormValues) => {
     try {
       setIsSubmitting(true);
-      
-      const product = {
-        id: crypto.randomUUID(),
-        ...values,
-        imageUrl: imagePreview,
-        createdAt: new Date().toISOString(),
-      };
 
-      // Get existing products from localStorage
-      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
-      
-      // Add new product
-      localStorage.setItem('products', JSON.stringify([product, ...existingProducts]));
+      // Upload image to Supabase Storage if we have one
+      let imageUrl = null;
+      if (imagePreview) {
+        const file = await fetch(imagePreview).then((res) => res.blob());
+        const fileExt = file.type.split('/')[1];
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      }
+
+      // Insert product into database
+      const { error: insertError } = await supabase
+        .from('products')
+        .insert({
+          product_name: values.productName,
+          category: values.category,
+          quantity: values.quantity,
+          unit: values.unit,
+          price: values.price,
+          description: values.description,
+          location: values.location,
+          image_url: imageUrl,
+        });
+
+      if (insertError) throw insertError;
+
+      // Invalidate products query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['products'] });
 
       toast({
         title: "Product listed successfully!",

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface Product {
   id: string;
@@ -16,14 +18,35 @@ interface Product {
   imageUrl: string;
 }
 
+const fetchProducts = async () => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
 const BuyingPage = () => {
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
+  
+  const { data: products = [], isLoading, error } = useQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts,
+  });
 
-  useEffect(() => {
-    const storedProducts = JSON.parse(localStorage.getItem('products') || '[]');
-    setProducts(storedProducts);
-  }, []);
+  if (isLoading) {
+    return <div className="text-center p-4">Loading products...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-4 text-red-500">Error loading products. Please try again later.</div>;
+  }
+
+  if (products.length === 0) {
+    return <div className="text-center p-4">No products available.</div>;
+  }
 
   const handleBuy = (product: Product) => {
     const subject = encodeURIComponent(`Interest in purchasing ${product.productName}`);
@@ -45,25 +68,21 @@ const BuyingPage = () => {
     });
   };
 
-  if (products.length === 0) {
-    return <div className="text-center p-4">No products available.</div>;
-  }
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {products.map((product) => (
         <Card key={product.id} className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            {product.imageUrl && (
+            {product.image_url && (
               <div className="w-full h-48 mb-4">
                 <img
-                  src={product.imageUrl}
-                  alt={product.productName}
+                  src={product.image_url}
+                  alt={product.product_name}
                   className="w-full h-full object-cover rounded-md"
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{product.productName}</CardTitle>
+            <CardTitle className="text-lg">{product.product_name}</CardTitle>
             <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
           </CardHeader>
           <CardContent>
