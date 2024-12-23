@@ -41,10 +41,16 @@ const Login = () => {
       }
 
       const formattedPhone = formatPhoneNumber(phone);
-      console.log("Sending OTP to:", formattedPhone); // Debug log
+      console.log("Sending OTP to:", formattedPhone);
 
       const { error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
+        options: {
+          shouldCreateUser: true, // Explicitly allow new user creation
+          data: {
+            phone: formattedPhone // Store phone in user metadata
+          }
+        }
       });
 
       if (error) {
