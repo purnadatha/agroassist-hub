@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,10 +36,12 @@ const Register = () => {
       // Sign up with phone OTP
       const { data, error } = await supabase.auth.signUp({
         phone,
-        password: phone, // Using phone number as password for Twilio OTP flow
+        password: phone, // Using phone as password for Twilio OTP flow
+        email,
         options: {
           data: {
             full_name: fullName,
+            phone: phone,
             aadhar_number: aadhar,
             pan_number: pan,
             email: email

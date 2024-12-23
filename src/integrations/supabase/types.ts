@@ -53,19 +53,31 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aadhar_number: string | null
           created_at: string | null
           email: string
+          full_name: string | null
           id: string
+          pan_number: string | null
+          phone: string | null
         }
         Insert: {
+          aadhar_number?: string | null
           created_at?: string | null
           email: string
+          full_name?: string | null
           id: string
+          pan_number?: string | null
+          phone?: string | null
         }
         Update: {
+          aadhar_number?: string | null
           created_at?: string | null
           email?: string
+          full_name?: string | null
           id?: string
+          pan_number?: string | null
+          phone?: string | null
         }
         Relationships: []
       }
