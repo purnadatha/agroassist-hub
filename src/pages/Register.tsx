@@ -33,15 +33,16 @@ const Register = () => {
         return;
       }
 
-      // Sign up with phone
+      // Sign up with phone OTP
       const { data, error } = await supabase.auth.signUp({
         phone,
-        email,
+        password: phone, // Using phone number as password for Twilio OTP flow
         options: {
           data: {
             full_name: fullName,
             aadhar_number: aadhar,
             pan_number: pan,
+            email: email
           }
         }
       });
