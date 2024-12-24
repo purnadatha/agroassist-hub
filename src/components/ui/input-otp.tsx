@@ -3,6 +3,12 @@ import { OTPInput, OTPInputContext } from "input-otp"
 import { Dot } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+interface OTPSlot {
+  char: string | undefined
+  hasFakeCaret: boolean
+  isActive: boolean
+}
+
 const InputOTP = React.forwardRef<
   React.ElementRef<typeof OTPInput>,
   React.ComponentPropsWithoutRef<typeof OTPInput>
@@ -33,7 +39,7 @@ const InputOTPSlot = React.forwardRef<
 >(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
   const { slots = [] } = inputOTPContext || {}
-  const slot = slots[index] || {}
+  const slot = (slots[index] || {}) as OTPSlot
   const { char, hasFakeCaret, isActive } = slot
 
   return (
