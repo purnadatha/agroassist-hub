@@ -6,7 +6,7 @@ interface OTPFormProps {
   setOTP: (value: string) => void;
   isLoading: boolean;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onResend: () => void;  // Changed to not require form event
+  onResend: () => void;
   onChangePhone: () => void;
   resendDisabled: boolean;
   resendTimer: number;
@@ -31,6 +31,7 @@ const OTPForm = ({
             value={otp}
             onChange={setOTP}
             maxLength={6}
+            disabled={isLoading}
             render={({ slots }) => (
               <InputOTPGroup>
                 {slots.map((slot, idx) => (
