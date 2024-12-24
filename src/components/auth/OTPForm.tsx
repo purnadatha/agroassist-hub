@@ -5,8 +5,8 @@ interface OTPFormProps {
   otp: string;
   setOTP: (value: string) => void;
   isLoading: boolean;
-  onSubmit: (e: React.FormEvent) => void;
-  onResend: () => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onResend: (e: React.FormEvent<HTMLFormElement>) => void;
   onChangePhone: () => void;
   resendDisabled: boolean;
   resendTimer: number;
@@ -58,7 +58,10 @@ const OTPForm = ({
           type="button"
           variant="outline"
           className="w-full"
-          onClick={onResend}
+          onClick={(e) => {
+            e.preventDefault();
+            onResend(e as React.FormEvent<HTMLFormElement>);
+          }}
           disabled={isLoading || resendDisabled}
         >
           {resendDisabled ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}

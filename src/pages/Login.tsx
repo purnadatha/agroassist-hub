@@ -60,7 +60,7 @@ const Login = () => {
     }, 1000);
   };
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -114,7 +114,7 @@ const Login = () => {
     }
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
+  const handleVerifyOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
