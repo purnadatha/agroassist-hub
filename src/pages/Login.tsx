@@ -6,16 +6,27 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 import PhoneForm from "@/components/auth/PhoneForm";
 import OTPForm from "@/components/auth/OTPForm";
+import { useLoginState } from "@/hooks/useLoginState";
+import { handleOTPVerification } from "@/utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showOTP, setShowOTP] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [otp, setOTP] = useState("");
-  const [resendDisabled, setResendDisabled] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
+  const {
+    isLoading,
+    showOTP,
+    phone,
+    otp,
+    resendDisabled,
+    resendTimer,
+    setIsLoading,
+    setShowOTP,
+    setPhone,
+    setOTP,
+    setResendDisabled,
+    setResendTimer,
+    startResendTimer
+  } = useLoginState();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -43,21 +54,6 @@ const Login = () => {
       return `+91${digits}`;
     }
     return `+${digits}`;
-  };
-
-  const startResendTimer = () => {
-    setResendDisabled(true);
-    setResendTimer(30);
-    const timer = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setResendDisabled(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
   const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -124,34 +120,32 @@ const Login = () => {
 
     try {
       const formattedPhone = formatPhoneNumber(phone);
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
-        token: otp,
-        type: 'sms'
-      });
-
-      if (error) {
-        console.error("OTP verification error:", error);
-        const errorMessage = error.message.includes("expired") 
-          ? "OTP has expired. Please request a new one."
-          : "Invalid OTP. Please try again.";
-        
-        toast({
-          title: "Verification failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-
-        if (error.message.includes("expired")) {
-          setOTP("");
-          setShowOTP(false);
-        }
-      } else if (data.user) {
+      const result = await handleOTPVerification(formattedPhone, otp);
+      
+      if (result.success) {
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
         navigate("/dashboard");
+      } else {
+        // Handle specific error cases
+        if (result.error.includes("expired")) {
+          toast({
+            title: "OTP Expired",
+            description: "The OTP has expired. Please request a new one.",
+            variant: "destructive",
+          });
+          setOTP("");
+          setShowOTP(false);
+          startResendTimer();
+        } else {
+          toast({
+            title: "Verification failed",
+            description: result.error,
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Unexpected error:", error);
