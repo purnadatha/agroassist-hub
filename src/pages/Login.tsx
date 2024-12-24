@@ -14,16 +14,30 @@ const Login = () => {
   const [showOTP, setShowOTP] = useState(false);
   const [phone, setPhone] = useState("");
   const [otp, setOTP] = useState("");
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   const formatPhoneNumber = (phone: string) => {
-    // Remove any non-digit characters
     const digits = phone.replace(/\D/g, '');
-    
-    // Assuming Indian numbers, add +91 prefix if not present
     if (!digits.startsWith('91')) {
       return `+91${digits}`;
     }
     return `+${digits}`;
+  };
+
+  const startResendTimer = () => {
+    setResendDisabled(true);
+    setResendTimer(30);
+    const timer = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setResendDisabled(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -46,9 +60,9 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOtp({
         phone: formattedPhone,
         options: {
-          shouldCreateUser: true, // Explicitly allow new user creation
+          shouldCreateUser: true,
           data: {
-            phone: formattedPhone // Store phone in user metadata
+            phone: formattedPhone
           }
         }
       });
@@ -62,6 +76,7 @@ const Login = () => {
         });
       } else {
         setShowOTP(true);
+        startResendTimer();
         toast({
           title: "OTP sent",
           description: "Please check your phone for the verification code",
@@ -93,11 +108,20 @@ const Login = () => {
 
       if (error) {
         console.error("OTP verification error:", error);
+        const errorMessage = error.message.includes("expired") 
+          ? "OTP has expired. Please request a new one."
+          : "Invalid OTP. Please try again.";
+        
         toast({
           title: "Verification failed",
-          description: "Invalid OTP. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
+
+        if (error.message.includes("expired")) {
+          setOTP("");
+          setShowOTP(false);
+        }
       } else if (data.user) {
         toast({
           title: "Login successful",
@@ -165,15 +189,28 @@ const Login = () => {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Verifying..." : "Verify OTP"}
               </Button>
-              <Button
-                type="button"
-                variant="link"
-                className="w-full"
-                onClick={() => setShowOTP(false)}
-                disabled={isLoading}
-              >
-                Change Phone Number
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full"
+                  onClick={() => setShowOTP(false)}
+                  disabled={isLoading}
+                >
+                  Change Phone Number
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleSendOTP}
+                  disabled={isLoading || resendDisabled}
+                >
+                  {resendDisabled 
+                    ? `Resend OTP in ${resendTimer}s` 
+                    : "Resend OTP"}
+                </Button>
+              </div>
             </form>
           )}
           <div className="mt-4 text-center text-sm">
