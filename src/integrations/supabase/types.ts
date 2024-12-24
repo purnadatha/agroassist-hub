@@ -55,7 +55,7 @@ export type Database = {
         Row: {
           aadhar_number: string | null
           created_at: string | null
-          email: string
+          email: string | null
           full_name: string | null
           id: string
           pan_number: string | null
@@ -64,7 +64,7 @@ export type Database = {
         Insert: {
           aadhar_number?: string | null
           created_at?: string | null
-          email: string
+          email?: string | null
           full_name?: string | null
           id: string
           pan_number?: string | null
@@ -73,7 +73,7 @@ export type Database = {
         Update: {
           aadhar_number?: string | null
           created_at?: string | null
-          email?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           pan_number?: string | null
