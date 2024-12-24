@@ -114,6 +114,10 @@ const Login = () => {
     }
   };
 
+  const handleResendOTP = () => {
+    handleSendOTP({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>);
+  };
+
   const handleVerifyOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -183,7 +187,7 @@ const Login = () => {
               setOTP={setOTP}
               isLoading={isLoading}
               onSubmit={handleVerifyOTP}
-              onResend={handleSendOTP}
+              onResend={handleResendOTP}
               onChangePhone={() => setShowOTP(false)}
               resendDisabled={resendDisabled}
               resendTimer={resendTimer}
