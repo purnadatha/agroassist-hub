@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import PhoneForm from "@/components/auth/PhoneForm";
+import OTPForm from "@/components/auth/OTPForm";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -151,67 +151,23 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           {!showOTP ? (
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone Number</label>
-                <Input 
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter your phone number (e.g., 9876543210)"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Sending OTP..." : "Send OTP"}
-              </Button>
-            </form>
+            <PhoneForm
+              phone={phone}
+              setPhone={setPhone}
+              isLoading={isLoading}
+              onSubmit={handleSendOTP}
+            />
           ) : (
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Enter OTP</label>
-                <div className="flex justify-center">
-                  <InputOTP
-                    value={otp}
-                    onChange={setOTP}
-                    maxLength={6}
-                    render={({ slots }) => (
-                      <InputOTPGroup>
-                        {slots.map((slot, idx) => (
-                          <InputOTPSlot key={idx} {...slot} index={idx} />
-                        ))}
-                      </InputOTPGroup>
-                    )}
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Verifying..." : "Verify OTP"}
-              </Button>
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="link"
-                  className="w-full"
-                  onClick={() => setShowOTP(false)}
-                  disabled={isLoading}
-                >
-                  Change Phone Number
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleSendOTP}
-                  disabled={isLoading || resendDisabled}
-                >
-                  {resendDisabled 
-                    ? `Resend OTP in ${resendTimer}s` 
-                    : "Resend OTP"}
-                </Button>
-              </div>
-            </form>
+            <OTPForm
+              otp={otp}
+              setOTP={setOTP}
+              isLoading={isLoading}
+              onSubmit={handleVerifyOTP}
+              onResend={handleSendOTP}
+              onChangePhone={() => setShowOTP(false)}
+              resendDisabled={resendDisabled}
+              resendTimer={resendTimer}
+            />
           )}
           <div className="mt-4 text-center text-sm">
             Don't have an account?{" "}
