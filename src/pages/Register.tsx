@@ -30,18 +30,22 @@ const Register = () => {
           description: "Please fill in all fields",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
+      // Format phone number
+      const formattedPhone = phone.startsWith('+91') ? phone : `+91${phone}`;
+
       // Sign up with phone OTP
       const { data, error } = await supabase.auth.signUp({
-        phone,
-        password: phone, // Using phone as password for Twilio OTP flow
+        phone: formattedPhone,
+        password: formattedPhone, // Using phone as password for Twilio OTP flow
         email,
         options: {
           data: {
             full_name: fullName,
-            phone: phone,
+            phone: formattedPhone,
             aadhar_number: aadhar,
             pan_number: pan,
             email: email
@@ -100,7 +104,7 @@ const Register = () => {
               <Input 
                 type="tel"
                 name="phone"
-                placeholder="Enter your phone number"
+                placeholder="Enter your phone number (e.g., 9876543210)"
                 required
                 disabled={isLoading}
               />
@@ -120,9 +124,12 @@ const Register = () => {
               <Input 
                 type="text"
                 name="aadhar"
-                placeholder="Enter your Aadhar number"
+                placeholder="Enter your 12-digit Aadhar number"
                 required
                 disabled={isLoading}
+                minLength={12}
+                maxLength={12}
+                pattern="\d{12}"
               />
             </div>
             <div className="space-y-2">
@@ -130,9 +137,12 @@ const Register = () => {
               <Input 
                 type="text"
                 name="pan"
-                placeholder="Enter your PAN number"
+                placeholder="Enter your 10-character PAN number"
                 required
                 disabled={isLoading}
+                minLength={10}
+                maxLength={10}
+                pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
