@@ -22,6 +22,9 @@ export const MobileNav = () => {
         <DropdownMenuItem onClick={() => navigate("/dashboard")}>
           Dashboard
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
+          Profile
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate("/marketplace")}>
           Marketplace
         </DropdownMenuItem>

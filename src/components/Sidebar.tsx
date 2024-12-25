@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Tractor, Landmark, LogOut, Sprout } from "lucide-react";
+import { Home, ShoppingBag, Tractor, Landmark, LogOut, Sprout, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
@@ -48,6 +48,14 @@ export const Sidebar = () => {
           >
             <Home className="mr-2 h-4 w-4" />
             Dashboard
+          </Button>
+          <Button 
+            variant={isActive("/profile") ? "default" : "ghost"} 
+            className="w-full justify-start" 
+            onClick={() => navigate("/profile")}
+          >
+            <User className="mr-2 h-4 w-4" />
+            Profile
           </Button>
           <Button 
             variant={isActive("/marketplace") ? "default" : "ghost"} 
