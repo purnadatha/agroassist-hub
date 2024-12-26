@@ -10,28 +10,52 @@
     <script>
       window.addEventListener('load', async function() {
         try {
+          // First check if we're in a valid context
+          if (!window.fetch) {
+            console.error('Fetch not supported in this environment');
+            return;
+          }
+
           const response = await fetch('https://ppvpakkqegbnfwmdnzgi.supabase.co/functions/v1/get-chatbase-id', {
+            method: 'GET',
             headers: {
-              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwdnBha2txZWdibmZ3bWRuemdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MDE5NTcsImV4cCI6MjA1MDA3Nzk1N30.BD947WUU6FWFKl-sAryeYfS8jCWP8V_cveXibyNN2bQ'
-            }
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwdnBha2txZWdibmZ3bWRuemdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ1MDE5NTcsImV4cCI6MjA1MDA3Nzk1N30.BD947WUU6FWFKl-sAryeYfS8jCWP8V_cveXibyNN2bQ',
+              'Content-Type': 'application/json'
+            },
+            mode: 'cors'
           });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const { chatbotId } = await response.json();
+          
           if (!chatbotId) {
             console.error('No chatbot ID found');
             return;
           }
+
+          // Set up chatbot configuration
           window.embeddedChatbotConfig = {
             chatbotId: chatbotId,
             domain: "www.chatbase.co"
-          }
+          };
+
+          // Create and append the script element
           const script = document.createElement('script');
           script.src = "https://www.chatbase.co/embed.min.js";
-          script.setAttribute('chatbotId', chatbotId);
-          script.setAttribute('domain', 'www.chatbase.co');
           script.defer = true;
+          
+          // Add error handling for script loading
+          script.onerror = function() {
+            console.error('Failed to load Chatbase script');
+          };
+          
+          // Add the script to the document
           document.head.appendChild(script);
         } catch (error) {
-          console.error('Error loading chatbot:', error);
+          console.error('Error setting up chatbot:', error);
         }
       });
     </script>
