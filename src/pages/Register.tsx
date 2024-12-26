@@ -30,7 +30,6 @@ const Register = () => {
     startResendTimer
   } = useLoginState();
 
-  // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -145,8 +144,8 @@ const Register = () => {
     try {
       const formattedPhone = formatPhoneNumber(phone);
       
-      // Sign up with phone and metadata
-      const { data, error } = await supabase.auth.signUp({
+      // First, sign up the user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         phone: formattedPhone,
         password: formattedPhone, // Using phone as password for Twilio OTP flow
         email: formData.email,
@@ -161,25 +160,40 @@ const Register = () => {
         }
       });
 
-      if (error) {
-        console.error("Registration error:", error);
-        toast({
-          title: "Registration failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Registration successful!",
-          description: "Please proceed to login",
-        });
-        navigate("/login");
+      if (signUpError) throw signUpError;
+
+      if (!authData.user) {
+        throw new Error("User creation failed");
       }
-    } catch (error) {
-      console.error("Unexpected error:", error);
+
+      // Explicitly insert into profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formattedPhone,
+          aadhar_number: formData.aadhar,
+          pan_number: formData.pan
+        });
+
+      if (profileError) throw profileError;
+
       toast({
-        title: "Registration error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Registration successful!",
+        description: "Please proceed to login",
+      });
+      
+      // Sign out the user after registration
+      await supabase.auth.signOut();
+      navigate("/login");
+      
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
