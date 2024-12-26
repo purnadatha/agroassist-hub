@@ -47,6 +47,134 @@ const bankSchemes: Record<string, LoanScheme[]> = {
       maxAmount: 750000,
       tenure: 48,
       description: "Finance for purchasing agricultural equipment and machinery"
+    },
+    {
+      id: "hdfc2",
+      bankName: "HDFC",
+      schemeName: "Kisan Gold Card",
+      interestRate: 7.5,
+      maxAmount: 1200000,
+      tenure: 60,
+      description: "Comprehensive credit solution for agricultural needs"
+    }
+  ],
+  "ICICI": [
+    {
+      id: "icici1",
+      bankName: "ICICI",
+      schemeName: "Kisan Flexi Cash",
+      interestRate: 7.8,
+      maxAmount: 800000,
+      tenure: 48,
+      description: "Flexible credit line for agricultural operations"
+    },
+    {
+      id: "icici2",
+      bankName: "ICICI",
+      schemeName: "Tractor Loan",
+      interestRate: 8.2,
+      maxAmount: 1500000,
+      tenure: 72,
+      description: "Special financing for tractor purchase"
+    }
+  ],
+  "PNB": [
+    {
+      id: "pnb1",
+      bankName: "PNB",
+      schemeName: "Krishi Udyami Scheme",
+      interestRate: 7.4,
+      maxAmount: 900000,
+      tenure: 60,
+      description: "Comprehensive loan for agricultural entrepreneurs"
+    }
+  ],
+  "Axis": [
+    {
+      id: "axis1",
+      bankName: "Axis",
+      schemeName: "Farm Power",
+      interestRate: 8.1,
+      maxAmount: 1000000,
+      tenure: 54,
+      description: "Financing for farm mechanization"
+    }
+  ],
+  "BOB": [
+    {
+      id: "bob1",
+      bankName: "Bank of Baroda",
+      schemeName: "Baroda Kisan Credit Card",
+      interestRate: 7.6,
+      maxAmount: 850000,
+      tenure: 48,
+      description: "Comprehensive credit card facility for farmers"
+    }
+  ],
+  "Union": [
+    {
+      id: "union1",
+      bankName: "Union Bank",
+      schemeName: "Union Green Card",
+      interestRate: 7.9,
+      maxAmount: 700000,
+      tenure: 36,
+      description: "Green initiative financing for sustainable farming"
+    }
+  ],
+  "Canara": [
+    {
+      id: "canara1",
+      bankName: "Canara Bank",
+      schemeName: "Crop Loan Plus",
+      interestRate: 7.3,
+      maxAmount: 600000,
+      tenure: 24,
+      description: "Short-term crop loan with additional benefits"
+    }
+  ],
+  "Indian": [
+    {
+      id: "indian1",
+      bankName: "Indian Bank",
+      schemeName: "Kisan Tatkal",
+      interestRate: 7.7,
+      maxAmount: 550000,
+      tenure: 36,
+      description: "Quick approval farm loan scheme"
+    }
+  ],
+  "BOI": [
+    {
+      id: "boi1",
+      bankName: "Bank of India",
+      schemeName: "Star Kisan Loan",
+      interestRate: 7.5,
+      maxAmount: 950000,
+      tenure: 60,
+      description: "Premium agricultural financing solution"
+    }
+  ],
+  "KVB": [
+    {
+      id: "kvb1",
+      bankName: "Karur Vysya Bank",
+      schemeName: "KVB Kisan Suvidha",
+      interestRate: 8.0,
+      maxAmount: 500000,
+      tenure: 36,
+      description: "Convenient loan scheme for small farmers"
+    }
+  ],
+  "Federal": [
+    {
+      id: "fed1",
+      bankName: "Federal Bank",
+      schemeName: "Agri Federal Plus",
+      interestRate: 8.2,
+      maxAmount: 600000,
+      tenure: 48,
+      description: "Comprehensive agricultural financing package"
     }
   ]
 };

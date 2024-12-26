@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ShoppingBag, Tractor, Landmark, Sprout } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AppliedScheme {
   id: string;
@@ -25,13 +26,31 @@ const Dashboard = () => {
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile?.full_name) {
+            setUserName(profile.full_name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
     const schemes = JSON.parse(localStorage.getItem("appliedSchemes") || "[]");
     setAppliedSchemes(schemes);
-    
-    // Get user data from localStorage
-    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-    setUserName(userData.fullName || "User");
+    fetchUserProfile();
   }, []);
+
+  // ... keep existing code (rest of the Dashboard component)
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -42,7 +61,8 @@ const Dashboard = () => {
         </div>
         <main className="p-4">
           <h1 className="text-2xl font-bold text-primary mb-1">Dashboard</h1>
-          <p className="text-gray-600 mb-6">Welcome back, {userName}!</p>
+          <p className="text-gray-600 mb-6">Welcome back, {userName || 'User'}!</p>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <WeatherWidget />
             <Card>
