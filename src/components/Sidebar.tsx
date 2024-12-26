@@ -37,7 +37,12 @@ export const Sidebar = () => {
     <div className="w-64 bg-background border-r p-4 hidden md:block">
       <div className="flex flex-col h-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-primary">AgroTrack</h2>
+          <h2 className="text-xl font-bold text-primary relative group">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-primary bg-size-200 animate-gradient-x">
+              AgroTrack
+            </span>
+            <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary via-blue-500 to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+          </h2>
           <ThemeToggle />
         </div>
         <div className="space-y-2">
