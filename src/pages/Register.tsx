@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PhoneForm from "@/components/auth/PhoneForm";
 import OTPForm from "@/components/auth/OTPForm";
@@ -10,6 +10,15 @@ import { useLoginState } from "@/hooks/useLoginState";
 import { handleOTPVerification } from "@/utils/auth";
 import { useRegistration } from "@/hooks/useRegistration";
 import { useToast } from "@/hooks/use-toast";
+
+// Helper function to format phone numbers
+const formatPhoneNumber = (phone: string) => {
+  const digits = phone.replace(/\D/g, '');
+  if (!digits.startsWith('91')) {
+    return `+91${digits}`;
+  }
+  return `+${digits}`;
+};
 
 const Register = () => {
   const navigate = useNavigate();
