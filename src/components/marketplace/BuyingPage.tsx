@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Product } from "./types";
 
 const fetchProducts = async () => {
@@ -18,11 +18,37 @@ const fetchProducts = async () => {
 
 const BuyingPage = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: fetchProducts,
   });
+
+  const handleDelete = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      
+      toast({
+        title: "Product deleted",
+        description: "The product has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return <div className="text-center p-4">Loading products...</div>;
@@ -70,8 +96,22 @@ const BuyingPage = () => {
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{product.product_name}</CardTitle>
-            <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-lg">{product.product_name}</CardTitle>
+                <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
+              </div>
+              {product.user_id === (supabase.auth.getUser()?.data?.user?.id) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handleDelete(product.id)}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Tractor } from "lucide-react";
+import { Tractor, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Tool {
   id: string;
+  user_id?: string;
   tool_name: string;
   category: string;
   rental_duration: string;
@@ -28,11 +29,37 @@ const fetchTools = async () => {
 
 const RentingPage = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: tools = [], isLoading, error } = useQuery({
     queryKey: ['tools'],
     queryFn: fetchTools,
   });
+
+  const handleDelete = async (toolId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tools')
+        .delete()
+        .eq('id', toolId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['tools'] });
+      
+      toast({
+        title: "Tool deleted",
+        description: "The tool has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error('Error deleting tool:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the tool. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return <div className="text-center p-4">Loading tools...</div>;
@@ -80,8 +107,22 @@ const RentingPage = () => {
                 />
               </div>
             )}
-            <CardTitle className="text-lg">{tool.tool_name}</CardTitle>
-            <p className="text-sm text-muted-foreground capitalize">{tool.category}</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-lg">{tool.tool_name}</CardTitle>
+                <p className="text-sm text-muted-foreground capitalize">{tool.category}</p>
+              </div>
+              {tool.user_id === (supabase.auth.getUser()?.data?.user?.id) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handleDelete(tool.id)}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
