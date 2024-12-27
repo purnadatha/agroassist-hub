@@ -1,32 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-
-const formSchema = z.object({
-  toolName: z.string().min(2, "Tool name must be at least 2 characters"),
-  category: z.string().min(1, "Please select a category"),
-  rentalDuration: z.string().min(1, "Rental duration is required"),
-  pricePerDay: z.string().min(1, "Price per day is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  location: z.string().min(2, "Location is required"),
-});
-
-type RentingFormValues = z.infer<typeof formSchema>;
+import { ToolBasicInfo } from "./ToolBasicInfo";
+import { ToolDetails } from "./ToolDetails";
+import { rentingFormSchema, type RentingFormValues } from "./types";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const RentingForm = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RentingFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(rentingFormSchema),
     defaultValues: {
       toolName: "",
       category: "",
@@ -53,18 +46,58 @@ const RentingForm = () => {
     try {
       setIsSubmitting(true);
 
-      const tool = {
-        id: crypto.randomUUID(),
-        ...values,
-        imageUrl: imagePreview,
-        createdAt: new Date().toISOString(),
-      };
+      // First, check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to list tools.",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
 
-      // Get existing tools from localStorage
-      const existingTools = JSON.parse(localStorage.getItem('tools') || '[]');
-      
-      // Add new tool
-      localStorage.setItem('tools', JSON.stringify([tool, ...existingTools]));
+      // Upload image to Supabase Storage if we have one
+      let imageUrl = null;
+      if (imagePreview) {
+        const file = await fetch(imagePreview).then((res) => res.blob());
+        const fileExt = file.type.split('/')[1];
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(fileName, file, {
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
+      }
+
+      // Insert tool into database
+      const { error: insertError } = await supabase
+        .from('tools')
+        .insert({
+          tool_name: values.toolName,
+          category: values.category,
+          rental_duration: values.rentalDuration,
+          price_per_day: values.pricePerDay,
+          description: values.description,
+          location: values.location,
+          image_url: imageUrl,
+          user_id: session.user.id,
+        });
+
+      if (insertError) throw insertError;
+
+      // Invalidate tools query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['tools'] });
 
       toast({
         title: "Tool listed successfully!",
@@ -88,119 +121,27 @@ const RentingForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="toolName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tool Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter tool name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="tractor">Tractor</SelectItem>
-                  <SelectItem value="harvester">Harvester</SelectItem>
-                  <SelectItem value="plough">Plough</SelectItem>
-                  <SelectItem value="sprayer">Sprayer</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="rentalDuration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rental Duration (days)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="Enter rental duration" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        <ToolBasicInfo form={form} />
+        <ToolDetails form={form} />
+        
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Tool Image</label>
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="cursor-pointer"
           />
-
-          <FormField
-            control={form.control}
-            name="pricePerDay"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Price per Day (₹)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="Enter price per day" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Enter tool description" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your location" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormItem>
-          <FormLabel>Tool Image</FormLabel>
-          <FormControl>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="cursor-pointer"
-            />
-          </FormControl>
           {imagePreview && (
             <div className="mt-2">
-              <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-md" />
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                className="w-32 h-32 object-cover rounded-md" 
+              />
             </div>
           )}
-        </FormItem>
+        </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Listing Tool..." : "List Tool"}
