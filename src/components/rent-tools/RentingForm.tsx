@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input"; // Added missing import
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { ToolBasicInfo } from "./ToolBasicInfo";
