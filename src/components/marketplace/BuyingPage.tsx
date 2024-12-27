@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Product } from "./types";
+import { useEffect, useState } from "react";
 
 const fetchProducts = async () => {
   const { data, error } = await supabase
@@ -19,7 +20,16 @@ const fetchProducts = async () => {
 const BuyingPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
+
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: fetchProducts,
@@ -101,7 +111,7 @@ const BuyingPage = () => {
                 <CardTitle className="text-lg">{product.product_name}</CardTitle>
                 <p className="text-sm text-muted-foreground capitalize">{product.category}</p>
               </div>
-              {product.user_id === (supabase.auth.getUser()?.data?.user?.id) && (
+              {product.user_id === currentUserId && (
                 <Button
                   variant="ghost"
                   size="icon"

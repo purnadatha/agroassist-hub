@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Tractor, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 interface Tool {
   id: string;
@@ -30,6 +31,15 @@ const fetchTools = async () => {
 const RentingPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
   
   const { data: tools = [], isLoading, error } = useQuery({
     queryKey: ['tools'],
@@ -112,7 +122,7 @@ const RentingPage = () => {
                 <CardTitle className="text-lg">{tool.tool_name}</CardTitle>
                 <p className="text-sm text-muted-foreground capitalize">{tool.category}</p>
               </div>
-              {tool.user_id === (supabase.auth.getUser()?.data?.user?.id) && (
+              {tool.user_id === currentUserId && (
                 <Button
                   variant="ghost"
                   size="icon"
