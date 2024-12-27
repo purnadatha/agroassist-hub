@@ -14,6 +14,8 @@ interface LoanScheme {
   maxAmount: number;
   tenure: number;
   description: string;
+  applicationDate?: string;  // Made optional with ?
+  status?: string;          // Made optional with ?
 }
 
 const LoanSchemes = () => {
@@ -101,7 +103,7 @@ const LoanSchemes = () => {
                         <h4 className="font-semibold">{scheme.bankName}</h4>
                         <p className="text-sm">{scheme.schemeName}</p>
                         <p className="text-sm text-muted-foreground">
-                          Applied on: {new Date(scheme.applicationDate).toLocaleDateString()}
+                          Applied on: {new Date(scheme.applicationDate!).toLocaleDateString()}
                         </p>
                         <p className="text-sm">Status: {scheme.status}</p>
                       </div>
