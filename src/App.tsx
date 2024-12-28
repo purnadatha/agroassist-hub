@@ -14,7 +14,14 @@ import Loans from "./pages/Loans";
 import CropRecommendation from "./pages/CropRecommendation";
 import Profile from "./pages/Profile";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <ThemeProvider defaultTheme="system" storageKey="agrotrack-theme">
