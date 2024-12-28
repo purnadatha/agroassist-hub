@@ -29,8 +29,21 @@ serve(async (req) => {
     }
 
     const chatbotId = Deno.env.get('CHATBASE_ID')
-    console.log('Chatbase ID retrieved:', chatbotId ? 'Successfully' : 'Not found')
+    if (!chatbotId) {
+      console.error('CHATBASE_ID environment variable not set')
+      return new Response(
+        JSON.stringify({ error: 'Chatbase ID not configured' }),
+        { 
+          status: 500,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    }
     
+    console.log('Successfully retrieved Chatbase ID')
     return new Response(
       JSON.stringify({ chatbotId }),
       { 
@@ -41,9 +54,9 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error retrieving Chatbase ID:', error)
+    console.error('Error in get-chatbase-id function:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to retrieve Chatbase ID' }),
+      JSON.stringify({ error: 'Internal server error' }),
       { 
         status: 500,
         headers: {

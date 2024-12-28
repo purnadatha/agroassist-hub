@@ -29,16 +29,16 @@
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
-          const { chatbotId } = await response.json();
+          const data = await response.json();
           
-          if (!chatbotId) {
-            console.error('No chatbot ID found');
+          if (!data.chatbotId) {
+            console.error('No chatbot ID found in response:', data);
             return;
           }
 
           // Set up chatbot configuration
           window.embeddedChatbotConfig = {
-            chatbotId: chatbotId,
+            chatbotId: data.chatbotId,
             domain: "www.chatbase.co"
           };
 
