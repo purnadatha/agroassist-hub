@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 interface WeatherData {
   temperature: number;
@@ -97,6 +98,7 @@ const CropRecommendation = () => {
           <MobileNav />
         </div>
         <main className="p-4">
+          <BackButton />
           <h1 className="text-2xl font-bold text-primary mb-6">Crop Recommendation</h1>
           <div className="grid gap-6 md:grid-cols-2">
             <Card>

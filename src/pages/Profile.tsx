@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BackButton } from "@/components/ui/back-button";
 
 const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -148,6 +149,7 @@ const Profile = () => {
           <MobileNav />
         </div>
         <main className="p-4">
+          <BackButton />
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-primary">Profile Details</h1>
             {!isEditing && (
