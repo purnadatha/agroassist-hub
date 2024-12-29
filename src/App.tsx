@@ -19,6 +19,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
@@ -29,17 +30,17 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/">
           <Routes>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/rent-tools" element={<RentTools />} />
-            <Route path="/loans" element={<Loans />} />
-            <Route path="/crop-recommendation" element={<CropRecommendation />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route index element={<Welcome />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="marketplace" element={<Marketplace />} />
+            <Route path="rent-tools" element={<RentTools />} />
+            <Route path="loans" element={<Loans />} />
+            <Route path="crop-recommendation" element={<CropRecommendation />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
