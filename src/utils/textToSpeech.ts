@@ -11,18 +11,22 @@ export async function speakText(text: string) {
 
     if (error) {
       console.error('Error fetching ElevenLabs API key:', error);
+      // If the error is about the secret not being found, provide a more helpful message
+      if (error.message.includes('Secret ELEVEN_LABS_API_KEY not found')) {
+        console.error('Please ensure the ELEVEN_LABS_API_KEY secret is set in your Supabase project settings.');
+      }
       return;
     }
 
     if (!apiKey) {
-      console.error('ElevenLabs API key not found');
+      console.error('ElevenLabs API key not found in response');
       return;
     }
 
     console.log("API key fetched successfully, making request to ElevenLabs...");
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`,
       {
         method: 'POST',
         headers: {
