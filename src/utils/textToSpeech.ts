@@ -4,9 +4,10 @@ const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah's voice ID
 
 export async function speakText(text: string) {
   try {
+    console.log("Fetching ElevenLabs API key...");
     const { data, error } = await supabase.rpc('get_secret', {
       secret_name: 'ELEVEN_LABS_API_KEY'
-    }) as { data: string | null, error: Error | null };
+    });
 
     if (error) {
       console.error('Error fetching ElevenLabs API key:', error);
@@ -19,6 +20,7 @@ export async function speakText(text: string) {
     }
 
     const apiKey = data;
+    console.log("API key fetched successfully, making request to ElevenLabs...");
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
@@ -41,9 +43,12 @@ export async function speakText(text: string) {
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('ElevenLabs API error:', errorText);
       throw new Error('Failed to generate speech');
     }
 
+    console.log("Speech generated successfully, playing audio...");
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
@@ -52,6 +57,7 @@ export async function speakText(text: string) {
     // Clean up the URL after playing
     audio.onended = () => {
       URL.revokeObjectURL(audioUrl);
+      console.log("Audio playback completed");
     };
   } catch (error) {
     console.error('Error in text-to-speech:', error);
