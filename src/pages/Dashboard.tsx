@@ -2,11 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { Button } from "@/components/ui/button";
-import { ShoppingBag, Tractor, Landmark, Sprout } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { QuickActions } from "@/components/dashboard/QuickActions";
+import { useSpeech } from "@/hooks/useSpeech";
 
 interface AppliedScheme {
   id: string;
@@ -21,9 +20,9 @@ interface AppliedScheme {
 }
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const [appliedSchemes, setAppliedSchemes] = useState<AppliedScheme[]>([]);
   const [userName, setUserName] = useState("");
+  const { speak } = useSpeech();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -38,6 +37,7 @@ const Dashboard = () => {
 
           if (profile?.full_name) {
             setUserName(profile.full_name);
+            speak(`Welcome back, ${profile.full_name}!`);
           }
         }
       } catch (error) {
@@ -48,9 +48,7 @@ const Dashboard = () => {
     const schemes = JSON.parse(localStorage.getItem("appliedSchemes") || "[]");
     setAppliedSchemes(schemes);
     fetchUserProfile();
-  }, []);
-
-  // ... keep existing code (rest of the Dashboard component)
+  }, [speak]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -69,39 +67,8 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
-                  onClick={() => navigate("/marketplace")}
-                >
-                  <ShoppingBag className="h-6 w-6 mb-2 group-hover:animate-bounce text-primary transition-colors duration-300" />
-                  <span>Marketplace</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
-                  onClick={() => navigate("/rent-tools")}
-                >
-                  <Tractor className="h-6 w-6 mb-2 group-hover:animate-pulse text-primary transition-colors duration-300" />
-                  <span>Rent Tools</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
-                  onClick={() => navigate("/crop-recommendation")}
-                >
-                  <Sprout className="h-6 w-6 mb-2 group-hover:rotate-12 text-primary transition-all duration-300" />
-                  <span>Crop Guide</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col items-center p-4 h-auto group transition-all duration-300 hover:scale-105"
-                  onClick={() => navigate("/loans")}
-                >
-                  <Landmark className="h-6 w-6 mb-2 group-hover:animate-pulse text-primary transition-colors duration-300" />
-                  <span>Loans</span>
-                </Button>
+              <CardContent>
+                <QuickActions />
               </CardContent>
             </Card>
 
