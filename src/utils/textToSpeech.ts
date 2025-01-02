@@ -6,7 +6,7 @@ export async function speakText(text: string) {
   try {
     const { data, error } = await supabase.rpc('get_secret', {
       secret_name: 'ELEVEN_LABS_API_KEY'
-    });
+    }) as { data: string | null, error: Error | null };
 
     if (error) {
       console.error('Error fetching ElevenLabs API key:', error);
@@ -18,7 +18,7 @@ export async function speakText(text: string) {
       return;
     }
 
-    const apiKey = data as string;
+    const apiKey = data;
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
