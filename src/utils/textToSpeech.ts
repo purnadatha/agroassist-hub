@@ -5,7 +5,7 @@ const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah's voice ID
 export async function speakText(text: string) {
   try {
     console.log("Fetching ElevenLabs API key...");
-    const { data, error } = await supabase.rpc('get_secret', {
+    const { data: apiKey, error } = await supabase.rpc('get_secret', {
       secret_name: 'ELEVEN_LABS_API_KEY'
     });
 
@@ -14,12 +14,11 @@ export async function speakText(text: string) {
       return;
     }
 
-    if (!data) {
+    if (!apiKey) {
       console.error('ElevenLabs API key not found');
       return;
     }
 
-    const apiKey = data;
     console.log("API key fetched successfully, making request to ElevenLabs...");
 
     const response = await fetch(
