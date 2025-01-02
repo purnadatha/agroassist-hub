@@ -4,12 +4,16 @@ const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah's voice ID
 
 export async function speakText(text: string) {
   try {
-    const { data: { secret: apiKey } } = await supabase.rpc('get_secret', { secret_name: 'ELEVEN_LABS_API_KEY' });
-    
-    if (!apiKey) {
-      console.error('ElevenLabs API key not found');
+    const { data, error } = await supabase.rpc('get_secret', {
+      secret_name: 'ELEVEN_LABS_API_KEY'
+    });
+
+    if (error || !data) {
+      console.error('Error fetching ElevenLabs API key:', error);
       return;
     }
+
+    const apiKey = data as string;
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
