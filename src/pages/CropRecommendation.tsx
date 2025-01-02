@@ -4,9 +4,16 @@ import { MobileNav } from "@/components/MobileNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Leaf } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface WeatherData {
   temperature: number;
@@ -17,34 +24,24 @@ interface WeatherData {
 const CropRecommendation = () => {
   const [soilType, setSoilType] = useState("");
   const [ph, setPh] = useState("");
+  const [rainfall, setRainfall] = useState("");
+  const [temperature, setTemperature] = useState("");
   const [loading, setLoading] = useState(false);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [recommendation, setRecommendation] = useState("");
   const { toast } = useToast();
 
-  const fetchWeatherData = async () => {
-    try {
-      // This is a mock API call - replace with actual weather API
-      const mockWeatherData = {
-        temperature: 25,
-        humidity: 65,
-        rainfall: 200,
-      };
-      setWeatherData(mockWeatherData);
-      return mockWeatherData;
-    } catch (error) {
-      console.error("Error fetching weather data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch weather data. Please try again.",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
+  const soilTypes = [
+    "Clay",
+    "Sandy",
+    "Loamy",
+    "Black",
+    "Red",
+    "Alluvial",
+    "Laterite",
+  ];
 
   const generateRecommendation = async () => {
-    if (!soilType || !ph) {
+    if (!soilType || !ph || !rainfall || !temperature) {
       toast({
         title: "Missing Information",
         description: "Please fill in all the required fields.",
@@ -53,25 +50,48 @@ const CropRecommendation = () => {
       return;
     }
 
+    // Validate pH range
+    const phValue = parseFloat(ph);
+    if (phValue < 0 || phValue > 14) {
+      toast({
+        title: "Invalid pH Value",
+        description: "pH must be between 0 and 14.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const weather = await fetchWeatherData();
-      if (!weather) return;
+      // This is a mock recommendation logic - in a real app, you'd call an AI model
+      let recommendedCrops = [];
+      
+      // Basic recommendation logic based on soil type and pH
+      if (soilType === "Clay" && phValue >= 6 && phValue <= 7.5) {
+        recommendedCrops = ["Rice", "Wheat", "Cotton"];
+      } else if (soilType === "Sandy" && phValue >= 5.5 && phValue <= 7) {
+        recommendedCrops = ["Groundnut", "Potato", "Carrot"];
+      } else if (soilType === "Loamy" && phValue >= 6 && phValue <= 7) {
+        recommendedCrops = ["Corn", "Soybean", "Vegetables"];
+      } else if (soilType === "Black" && phValue >= 6.5 && phValue <= 8) {
+        recommendedCrops = ["Cotton", "Sugarcane", "Sunflower"];
+      } else {
+        recommendedCrops = ["General crops suitable for your soil"];
+      }
 
-      // This is a mock AI recommendation - replace with actual AI model
-      const mockRecommendation = `Based on the current conditions:
+      const mockRecommendation = `Based on your inputs:
         - Soil Type: ${soilType}
         - pH Level: ${ph}
-        - Temperature: ${weather.temperature}°C
-        - Humidity: ${weather.humidity}%
-        - Rainfall: ${weather.rainfall}mm
+        - Rainfall: ${rainfall} mm
+        - Temperature: ${temperature}°C
 
-        Recommended crops:
-        1. Rice
-        2. Wheat
-        3. Maize
+        Recommended crops for your conditions:
+        ${recommendedCrops.map((crop, index) => `${index + 1}. ${crop}`).join('\n')}
         
-        These crops are well-suited for your current soil conditions and local climate.`;
+        Additional considerations:
+        - Ensure proper irrigation if rainfall is less than required
+        - Consider crop rotation to maintain soil health
+        - Monitor soil moisture levels regularly`;
 
       setRecommendation(mockRecommendation);
       toast({
@@ -99,31 +119,60 @@ const CropRecommendation = () => {
         </div>
         <main className="p-4">
           <BackButton />
-          <h1 className="text-2xl font-bold text-primary mb-6">Crop Recommendation</h1>
+          <div className="flex items-center gap-2 mb-6">
+            <Leaf className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold text-primary">Smart Crop Recommendation</h1>
+          </div>
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Soil Information</CardTitle>
+                <CardTitle>Soil Parameters</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Soil Type</label>
-                  <Input
-                    placeholder="Enter soil type"
-                    value={soilType}
-                    onChange={(e) => setSoilType(e.target.value)}
-                  />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Soil Type</label>
+                  <Select value={soilType} onValueChange={setSoilType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Soil Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {soilTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">pH Level</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Soil pH (0-14)</label>
                   <Input
                     type="number"
-                    placeholder="Enter pH level"
+                    placeholder="Enter soil pH"
                     value={ph}
                     onChange={(e) => setPh(e.target.value)}
                     min="0"
                     max="14"
                     step="0.1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Rainfall (mm)</label>
+                  <Input
+                    type="number"
+                    placeholder="Enter annual rainfall"
+                    value={rainfall}
+                    onChange={(e) => setRainfall(e.target.value)}
+                    min="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Temperature (°C)</label>
+                  <Input
+                    type="number"
+                    placeholder="Enter average temperature"
+                    value={temperature}
+                    onChange={(e) => setTemperature(e.target.value)}
                   />
                 </div>
                 <Button
@@ -132,26 +181,13 @@ const CropRecommendation = () => {
                   disabled={loading}
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Generate Recommendation
+                  Get Recommendation
                 </Button>
               </CardContent>
             </Card>
 
-            {weatherData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Weather Conditions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p>Temperature: {weatherData.temperature}°C</p>
-                  <p>Humidity: {weatherData.humidity}%</p>
-                  <p>Rainfall: {weatherData.rainfall}mm</p>
-                </CardContent>
-              </Card>
-            )}
-
             {recommendation && (
-              <Card className="md:col-span-2">
+              <Card>
                 <CardHeader>
                   <CardTitle>AI Recommendation</CardTitle>
                 </CardHeader>
