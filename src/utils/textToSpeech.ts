@@ -8,8 +8,13 @@ export async function speakText(text: string) {
       secret_name: 'ELEVEN_LABS_API_KEY'
     });
 
-    if (error || !data) {
+    if (error) {
       console.error('Error fetching ElevenLabs API key:', error);
+      return;
+    }
+
+    if (!data) {
+      console.error('ElevenLabs API key not found');
       return;
     }
 
