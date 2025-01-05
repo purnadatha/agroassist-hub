@@ -19,6 +19,8 @@ serve(async (req) => {
       throw new Error('Weather API key not found')
     }
 
+    console.log('Fetching weather data for:', { latitude, longitude })
+    
     const response = await fetch(
       `https://api.tomorrow.io/v4/weather/forecast?location=${latitude},${longitude}&apikey=${apiKey}`,
       {
@@ -29,10 +31,12 @@ serve(async (req) => {
     )
 
     if (!response.ok) {
+      console.error('Weather API error:', response.status, await response.text())
       throw new Error(`Weather API responded with ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('Weather data fetched successfully')
     
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

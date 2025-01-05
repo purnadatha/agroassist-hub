@@ -6,34 +6,27 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const api_key = Deno.env.get('TOMORROW_IO_API_KEY')
-    console.log('Weather API key retrieved successfully')
+    const apiKey = Deno.env.get('MAPBOX_ACCESS_TOKEN')
+    if (!apiKey) {
+      throw new Error('Mapbox API key not found')
+    }
     
     return new Response(
-      JSON.stringify({ api_key }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
-      }
+      JSON.stringify({ api_key: apiKey }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error retrieving weather API key:', error)
+    console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to retrieve API key' }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
   }
