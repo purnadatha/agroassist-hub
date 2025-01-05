@@ -7,16 +7,17 @@ import { useState, useEffect } from "react";
 import { useToast } from "./ui/use-toast";
 
 interface WeatherData {
-  timelines: {
-    daily: Array<{
-      values: {
-        temperatureAvg: number;
-        temperatureApparentAvg: number;
-        precipitationProbabilityAvg: number;
-        cloudCoverAvg: number;
-      };
-    }>;
+  main: {
+    temp: number;
+    feels_like: number;
   };
+  clouds: {
+    all: number;
+  };
+  weather: Array<{
+    main: string;
+    description: string;
+  }>;
 }
 
 interface Location {
@@ -121,9 +122,9 @@ export const WeatherWidget = () => {
     );
   }
 
-  const todayWeather = weather?.timelines?.daily[0]?.values;
-  const isPartlyCloudy = todayWeather?.cloudCoverAvg > 30 && todayWeather?.cloudCoverAvg <= 70;
-  const isCloudy = todayWeather?.cloudCoverAvg > 70;
+  const isPartlyCloudy = weather?.clouds?.all > 30 && weather?.clouds?.all <= 70;
+  const isCloudy = weather?.clouds?.all > 70;
+  const weatherDescription = weather?.weather[0]?.description || "Unknown";
 
   return (
     <Card className="animate-fade-in">
@@ -147,10 +148,10 @@ export const WeatherWidget = () => {
             <Thermometer className="h-8 w-8 text-primary animate-pulse" />
             <div>
               <p className="text-2xl font-bold">
-                {todayWeather?.temperatureAvg ? Math.round(todayWeather.temperatureAvg) : "--"}°C
+                {weather?.main?.temp ? Math.round(weather.main.temp) : "--"}°C
               </p>
               <p className="text-sm text-gray-500">
-                Feels like {todayWeather?.temperatureApparentAvg ? Math.round(todayWeather.temperatureApparentAvg) : "--"}°C
+                Feels like {weather?.main?.feels_like ? Math.round(weather.main.feels_like) : "--"}°C
               </p>
             </div>
           </div>
@@ -161,11 +162,11 @@ export const WeatherWidget = () => {
               isCloudy && "translate-x-2 scale-110"
             )} />
             <div>
-              <p className="text-sm">
-                {todayWeather?.cloudCoverAvg > 50 ? "Cloudy" : "Partly Cloudy"}
+              <p className="text-sm capitalize">
+                {weatherDescription}
               </p>
               <p className="text-sm text-gray-500">
-                {todayWeather?.precipitationProbabilityAvg ? Math.round(todayWeather.precipitationProbabilityAvg) : "--"}% chance of rain
+                {weather?.clouds?.all}% cloud cover
               </p>
             </div>
           </div>

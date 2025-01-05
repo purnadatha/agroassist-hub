@@ -14,7 +14,7 @@ serve(async (req) => {
     const { latitude, longitude } = await req.json()
     
     // Get API key from Supabase secrets
-    const apiKey = Deno.env.get('TOMORROW_IO_API_KEY')
+    const apiKey = Deno.env.get('OPENWEATHER_API_KEY')
     if (!apiKey) {
       throw new Error('Weather API key not found')
     }
@@ -22,7 +22,7 @@ serve(async (req) => {
     console.log('Fetching weather data for:', { latitude, longitude })
     
     const response = await fetch(
-      `https://api.tomorrow.io/v4/weather/forecast?location=${latitude},${longitude}&apikey=${apiKey}`,
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`,
       {
         headers: {
           'Accept': 'application/json',
