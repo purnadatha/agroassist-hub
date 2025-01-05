@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cloud, Sun, Thermometer, Loader2 } from "lucide-react";
+import { Cloud, Sun, Thermometer, Loader2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { useToast } from "./ui/use-toast";
 
 interface WeatherData {
   timelines: {
@@ -17,28 +19,72 @@ interface WeatherData {
   };
 }
 
+interface Location {
+  latitude: number;
+  longitude: number;
+  locationName: string;
+}
+
 export const WeatherWidget = () => {
-  const { data: weather, isLoading, error } = useQuery({
-    queryKey: ["weather"],
-    queryFn: async () => {
-      // Mocked response to maintain temperature around 21 degrees
-      return {
-        timelines: {
-          daily: [{
-            values: {
-              temperatureAvg: 21.5,
-              temperatureApparentAvg: 21,
-              precipitationProbabilityAvg: 20,
-              cloudCoverAvg: 40
-            }
-          }]
+  const [location, setLocation] = useState<Location | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHIwOWh4Z2cwMGRqMmtvNzVwNnpxZXF4In0.a9qmD5MJ6oRlIUkm3sATvg`
+            );
+            const data = await response.json();
+            const placeName = data.features[0]?.place_name || "Current Location";
+            
+            setLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              locationName: placeName,
+            });
+          } catch (error) {
+            console.error("Error fetching location name:", error);
+            setLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              locationName: "Current Location",
+            });
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast({
+            title: "Location Access Required",
+            description: "Please enable location access for accurate weather data.",
+            variant: "destructive",
+          });
         }
-      } as WeatherData;
+      );
+    }
+  }, [toast]);
+
+  const { data: weather, isLoading, error } = useQuery({
+    queryKey: ["weather", location?.latitude, location?.longitude],
+    queryFn: async () => {
+      if (!location) return null;
+      
+      const { data, error } = await supabase.functions.invoke('get-weather', {
+        body: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+      });
+
+      if (error) throw error;
+      return data as WeatherData;
     },
-    refetchInterval: 1800000, // Refetch every 30 minutes
+    enabled: !!location,
   });
 
-  if (isLoading) {
+  if (isLoading || !location) {
     return (
       <Card>
         <CardHeader>
@@ -63,7 +109,7 @@ export const WeatherWidget = () => {
     );
   }
 
-  const todayWeather = weather?.timelines.daily[0].values;
+  const todayWeather = weather?.timelines?.daily[0]?.values;
   const isPartlyCloudy = todayWeather?.cloudCoverAvg > 30 && todayWeather?.cloudCoverAvg <= 70;
   const isCloudy = todayWeather?.cloudCoverAvg > 70;
 
@@ -77,6 +123,10 @@ export const WeatherWidget = () => {
             isCloudy && "opacity-50"
           )} />
           Weather Forecast
+          <span className="text-sm font-normal text-muted-foreground flex items-center gap-1">
+            <MapPin className="h-4 w-4" />
+            {location.locationName}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -85,10 +135,10 @@ export const WeatherWidget = () => {
             <Thermometer className="h-8 w-8 text-primary animate-pulse" />
             <div>
               <p className="text-2xl font-bold">
-                {todayWeather?.temperatureAvg ? Math.round(todayWeather.temperatureAvg) : 21}°C
+                {todayWeather?.temperatureAvg ? Math.round(todayWeather.temperatureAvg) : "--"}°C
               </p>
               <p className="text-sm text-gray-500">
-                Feels like {todayWeather?.temperatureApparentAvg ? Math.round(todayWeather.temperatureApparentAvg) : 21}°C
+                Feels like {todayWeather?.temperatureApparentAvg ? Math.round(todayWeather.temperatureApparentAvg) : "--"}°C
               </p>
             </div>
           </div>
@@ -103,7 +153,7 @@ export const WeatherWidget = () => {
                 {todayWeather?.cloudCoverAvg > 50 ? "Cloudy" : "Partly Cloudy"}
               </p>
               <p className="text-sm text-gray-500">
-                {todayWeather?.precipitationProbabilityAvg ? Math.round(todayWeather.precipitationProbabilityAvg) : 20}% chance of rain
+                {todayWeather?.precipitationProbabilityAvg ? Math.round(todayWeather.precipitationProbabilityAvg) : "--"}% chance of rain
               </p>
             </div>
           </div>

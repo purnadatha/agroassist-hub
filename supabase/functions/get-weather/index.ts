@@ -1,0 +1,50 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const { latitude, longitude } = await req.json()
+    
+    // Get API key from Supabase secrets
+    const apiKey = Deno.env.get('TOMORROW_IO_API_KEY')
+    if (!apiKey) {
+      throw new Error('Weather API key not found')
+    }
+
+    const response = await fetch(
+      `https://api.tomorrow.io/v4/weather/forecast?location=${latitude},${longitude}&apikey=${apiKey}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Weather API responded with ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (error) {
+    console.error('Error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
+  }
+})
