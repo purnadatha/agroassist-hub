@@ -40,6 +40,109 @@ const CropRecommendation = () => {
     "Laterite",
   ];
 
+  const getCropRecommendations = (
+    soilType: string,
+    ph: number,
+    rainfall: number,
+    temperature: number
+  ) => {
+    const recommendations: { [key: string]: string[] } = {
+      Clay: {
+        crops: ["Rice", "Wheat", "Cotton", "Sugarcane"],
+        phRange: [6.0, 7.5],
+        rainfallRange: [750, 2000],
+        tempRange: [20, 35],
+      },
+      Sandy: {
+        crops: ["Groundnut", "Potato", "Carrot", "Watermelon"],
+        phRange: [5.5, 7.0],
+        rainfallRange: [500, 1000],
+        tempRange: [15, 30],
+      },
+      Loamy: {
+        crops: ["Corn", "Soybean", "Vegetables", "Fruits"],
+        phRange: [6.0, 7.0],
+        rainfallRange: [600, 1500],
+        tempRange: [18, 32],
+      },
+      Black: {
+        crops: ["Cotton", "Sugarcane", "Sunflower", "Chickpea"],
+        phRange: [6.5, 8.0],
+        rainfallRange: [500, 1200],
+        tempRange: [25, 35],
+      },
+      Red: {
+        crops: ["Groundnut", "Millet", "Tobacco", "Pulses"],
+        phRange: [6.0, 7.0],
+        rainfallRange: [400, 1000],
+        tempRange: [20, 30],
+      },
+      Alluvial: {
+        crops: ["Rice", "Wheat", "Sugarcane", "Vegetables"],
+        phRange: [6.5, 7.5],
+        rainfallRange: [700, 1500],
+        tempRange: [20, 35],
+      },
+      Laterite: {
+        crops: ["Cashew", "Rubber", "Tea", "Coffee"],
+        phRange: [5.5, 6.5],
+        rainfallRange: [1500, 3000],
+        tempRange: [20, 30],
+      },
+    }[soilType];
+
+    if (!recommendations) {
+      return "Invalid soil type selected.";
+    }
+
+    const { crops, phRange, rainfallRange, tempRange } = recommendations;
+    let suitableCrops = [...crops];
+    let conditions = [];
+
+    // Check pH suitability
+    if (ph < phRange[0] || ph > phRange[1]) {
+      conditions.push(`pH is ${ph < phRange[0] ? "too low" : "too high"}. Ideal range is ${phRange[0]}-${phRange[1]}`);
+    }
+
+    // Check rainfall suitability
+    if (rainfall < rainfallRange[0] || rainfall > rainfallRange[1]) {
+      conditions.push(
+        `Rainfall is ${rainfall < rainfallRange[0] ? "insufficient" : "excessive"}. Ideal range is ${rainfallRange[0]}-${rainfallRange[1]} mm`
+      );
+    }
+
+    // Check temperature suitability
+    if (temperature < tempRange[0] || temperature > tempRange[1]) {
+      conditions.push(
+        `Temperature is ${temperature < tempRange[0] ? "too low" : "too high"}. Ideal range is ${tempRange[0]}-${tempRange[1]}°C`
+      );
+    }
+
+    let recommendation = `Based on your inputs:\n`;
+    recommendation += `Soil Type: ${soilType}\n`;
+    recommendation += `pH Level: ${ph}\n`;
+    recommendation += `Rainfall: ${rainfall} mm\n`;
+    recommendation += `Temperature: ${temperature}°C\n\n`;
+
+    recommendation += `Recommended crops for your soil type:\n`;
+    recommendation += crops.map((crop, index) => `${index + 1}. ${crop}`).join('\n');
+    recommendation += '\n\n';
+
+    if (conditions.length > 0) {
+      recommendation += 'Important considerations:\n';
+      recommendation += conditions.map(condition => `- ${condition}`).join('\n');
+      recommendation += '\n\n';
+    }
+
+    recommendation += 'Additional recommendations:\n';
+    recommendation += '- Consider crop rotation to maintain soil health\n';
+    recommendation += '- Monitor soil moisture levels regularly\n';
+    recommendation += '- Use appropriate fertilizers based on soil testing\n';
+    recommendation += '- Implement proper irrigation systems if rainfall is insufficient\n';
+
+    return recommendation;
+  };
+
   const generateRecommendation = async () => {
     if (!soilType || !ph || !rainfall || !temperature) {
       toast({
@@ -63,37 +166,17 @@ const CropRecommendation = () => {
 
     setLoading(true);
     try {
-      // This is a mock recommendation logic - in a real app, you'd call an AI model
-      let recommendedCrops = [];
+      const rainfallValue = parseFloat(rainfall);
+      const temperatureValue = parseFloat(temperature);
       
-      // Basic recommendation logic based on soil type and pH
-      if (soilType === "Clay" && phValue >= 6 && phValue <= 7.5) {
-        recommendedCrops = ["Rice", "Wheat", "Cotton"];
-      } else if (soilType === "Sandy" && phValue >= 5.5 && phValue <= 7) {
-        recommendedCrops = ["Groundnut", "Potato", "Carrot"];
-      } else if (soilType === "Loamy" && phValue >= 6 && phValue <= 7) {
-        recommendedCrops = ["Corn", "Soybean", "Vegetables"];
-      } else if (soilType === "Black" && phValue >= 6.5 && phValue <= 8) {
-        recommendedCrops = ["Cotton", "Sugarcane", "Sunflower"];
-      } else {
-        recommendedCrops = ["General crops suitable for your soil"];
-      }
+      const recommendation = getCropRecommendations(
+        soilType,
+        phValue,
+        rainfallValue,
+        temperatureValue
+      );
 
-      const mockRecommendation = `Based on your inputs:
-        - Soil Type: ${soilType}
-        - pH Level: ${ph}
-        - Rainfall: ${rainfall} mm
-        - Temperature: ${temperature}°C
-
-        Recommended crops for your conditions:
-        ${recommendedCrops.map((crop, index) => `${index + 1}. ${crop}`).join('\n')}
-        
-        Additional considerations:
-        - Ensure proper irrigation if rainfall is less than required
-        - Consider crop rotation to maintain soil health
-        - Monitor soil moisture levels regularly`;
-
-      setRecommendation(mockRecommendation);
+      setRecommendation(recommendation);
       toast({
         title: "Success",
         description: "Crop recommendation generated successfully!",
@@ -109,6 +192,8 @@ const CropRecommendation = () => {
       setLoading(false);
     }
   };
+
+  // ... keep existing code (JSX for the form and layout)
 
   return (
     <div className="min-h-screen bg-background flex">
