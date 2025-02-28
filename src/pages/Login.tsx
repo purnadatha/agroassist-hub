@@ -27,6 +27,7 @@ const Login = () => {
   } = useLoginState();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -91,7 +92,7 @@ const Login = () => {
         
         // Handling specific error messages more user-friendly
         if (authError.message.includes("Invalid login credentials")) {
-          setError("Incorrect email or password. Please try again or create an account.");
+          setError("Account not found. Please register first or check your credentials.");
           
           // Debug info - shows the error in the console but doesn't show to the user
           console.log("Auth error details:", authError);
@@ -126,12 +127,74 @@ const Login = () => {
     }
   };
 
-  // For testing - use these test credentials which work with the system
-  const fillTestCredentials = () => {
-    setEmail("demo@agrotrack.com");
-    setPassword("demo123");
-    // Clear any previous errors when filling test credentials
+  // For easier testing, let's modify this to register a demo account first
+  const createAndLoginWithDemoAccount = async () => {
     clearError();
+    setIsLoading(true);
+    
+    const demoEmail = "demo@agrotrack.com";
+    const demoPassword = "demo123";
+    
+    try {
+      // First check if user already exists
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword,
+      });
+      
+      // If login succeeds, user exists
+      if (signInData.user) {
+        setEmail(demoEmail);
+        setPassword(demoPassword);
+        toast({
+          title: "Demo credentials ready",
+          description: "Demo account credentials have been filled. Click Login to continue.",
+        });
+        setRegistrationSuccess(true);
+        return;
+      }
+      
+      // If user doesn't exist, create the demo account
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: demoEmail,
+        password: demoPassword,
+        options: {
+          data: {
+            full_name: "Demo User",
+            phone: "1234567890",
+            email: demoEmail
+          }
+        }
+      });
+
+      if (signUpError) {
+        console.error("Demo account creation error:", signUpError);
+        if (signUpError.message.includes("already registered")) {
+          setEmail(demoEmail);
+          setPassword(demoPassword);
+          toast({
+            title: "Demo account already exists",
+            description: "Credentials filled. You can now login with the demo account.",
+          });
+          setRegistrationSuccess(true);
+        } else {
+          setError("Couldn't create demo account: " + signUpError.message);
+        }
+      } else if (data.user) {
+        setEmail(demoEmail);
+        setPassword(demoPassword);
+        toast({
+          title: "Demo account created",
+          description: "Demo account has been created successfully. You can now login.",
+        });
+        setRegistrationSuccess(true);
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -150,6 +213,15 @@ const Login = () => {
               </AlertDescription>
             </Alert>
           )}
+          
+          {registrationSuccess && (
+            <Alert className="mb-4 bg-green-50 border-green-200">
+              <AlertDescription className="text-green-700">
+                Demo account is ready to use. Click Login to continue.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -188,18 +260,18 @@ const Login = () => {
               {isLoading ? "Logging in..." : "Login"}
             </Button>
             
-            {/* Test credentials button - more prominent now */}
+            {/* Demo account creation button */}
             <div className="text-center mt-2">
               <Button
                 type="button"
-                onClick={fillTestCredentials}
+                onClick={createAndLoginWithDemoAccount}
                 variant="outline"
                 className="text-sm w-full"
               >
-                Use Demo Credentials
+                Create & Use Demo Account
               </Button>
               <p className="text-xs text-muted-foreground mt-1">
-                (Email: demo@agrotrack.com / Password: demo123)
+                (This will create a demo account you can use to test the app)
               </p>
             </div>
             
