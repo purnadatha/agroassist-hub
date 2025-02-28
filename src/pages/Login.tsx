@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLoginState } from "@/hooks/useLoginState";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,9 +17,12 @@ const Login = () => {
     isLoading,
     email,
     password,
+    error,
     setIsLoading,
     setEmail,
-    setPassword
+    setPassword,
+    setError,
+    clearError
   } = useLoginState();
 
   // Check if user is already logged in
@@ -41,30 +45,59 @@ const Login = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const validateForm = () => {
+    clearError();
+    
+    if (!email) {
+      setError("Email is required");
+      return false;
+    }
+    
+    if (!password) {
+      setError("Password is required");
+      return false;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      if (!email || !password) {
-        toast({
-          title: "Missing fields",
-          description: "Please fill in all fields",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       });
 
-      if (error) {
-        console.error("Login error:", error);
+      if (authError) {
+        console.error("Login error:", authError);
+        
+        // Handle specific error codes
+        if (authError.message.includes("Invalid login credentials")) {
+          setError("Invalid email or password. Please try again.");
+        } else if (authError.message.includes("Email not confirmed")) {
+          setError("Please confirm your email address before logging in.");
+        } else {
+          setError(authError.message || "Login failed. Please try again.");
+        }
+        
         toast({
           title: "Login failed",
-          description: error.message,
+          description: "Please check your credentials and try again.",
           variant: "destructive",
         });
       } else if (data.user) {
@@ -74,8 +107,9 @@ const Login = () => {
         });
         navigate("/dashboard");
       }
-    } catch (error) {
-      console.error("Unexpected error:", error);
+    } catch (unexpectedError) {
+      console.error("Unexpected error:", unexpectedError);
+      setError("An unexpected error occurred. Please try again.");
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -95,6 +129,13 @@ const Login = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -104,8 +145,8 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                required
                 disabled={isLoading}
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -116,8 +157,8 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                required
                 disabled={isLoading}
+                autoComplete="current-password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
