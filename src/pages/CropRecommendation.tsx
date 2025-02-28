@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
@@ -15,10 +16,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface WeatherData {
-  temperature: number;
-  humidity: number;
-  rainfall: number;
+interface SoilRecommendation {
+  crops: string[];
+  phRange: [number, number];
+  rainfallRange: [number, number];
+  tempRange: [number, number];
+}
+
+interface RecommendationData {
+  [key: string]: SoilRecommendation;
 }
 
 const CropRecommendation = () => {
@@ -40,63 +46,64 @@ const CropRecommendation = () => {
     "Laterite",
   ];
 
+  const recommendations: RecommendationData = {
+    Clay: {
+      crops: ["Rice", "Wheat", "Cotton", "Sugarcane"],
+      phRange: [6.0, 7.5],
+      rainfallRange: [750, 2000],
+      tempRange: [20, 35],
+    },
+    Sandy: {
+      crops: ["Groundnut", "Potato", "Carrot", "Watermelon"],
+      phRange: [5.5, 7.0],
+      rainfallRange: [500, 1000],
+      tempRange: [15, 30],
+    },
+    Loamy: {
+      crops: ["Corn", "Soybean", "Vegetables", "Fruits"],
+      phRange: [6.0, 7.0],
+      rainfallRange: [600, 1500],
+      tempRange: [18, 32],
+    },
+    Black: {
+      crops: ["Cotton", "Sugarcane", "Sunflower", "Chickpea"],
+      phRange: [6.5, 8.0],
+      rainfallRange: [500, 1200],
+      tempRange: [25, 35],
+    },
+    Red: {
+      crops: ["Groundnut", "Millet", "Tobacco", "Pulses"],
+      phRange: [6.0, 7.0],
+      rainfallRange: [400, 1000],
+      tempRange: [20, 30],
+    },
+    Alluvial: {
+      crops: ["Rice", "Wheat", "Sugarcane", "Vegetables"],
+      phRange: [6.5, 7.5],
+      rainfallRange: [700, 1500],
+      tempRange: [20, 35],
+    },
+    Laterite: {
+      crops: ["Cashew", "Rubber", "Tea", "Coffee"],
+      phRange: [5.5, 6.5],
+      rainfallRange: [1500, 3000],
+      tempRange: [20, 30],
+    },
+  };
+
   const getCropRecommendations = (
     soilType: string,
     ph: number,
     rainfall: number,
     temperature: number
   ) => {
-    const recommendations: { [key: string]: string[] } = {
-      Clay: {
-        crops: ["Rice", "Wheat", "Cotton", "Sugarcane"],
-        phRange: [6.0, 7.5],
-        rainfallRange: [750, 2000],
-        tempRange: [20, 35],
-      },
-      Sandy: {
-        crops: ["Groundnut", "Potato", "Carrot", "Watermelon"],
-        phRange: [5.5, 7.0],
-        rainfallRange: [500, 1000],
-        tempRange: [15, 30],
-      },
-      Loamy: {
-        crops: ["Corn", "Soybean", "Vegetables", "Fruits"],
-        phRange: [6.0, 7.0],
-        rainfallRange: [600, 1500],
-        tempRange: [18, 32],
-      },
-      Black: {
-        crops: ["Cotton", "Sugarcane", "Sunflower", "Chickpea"],
-        phRange: [6.5, 8.0],
-        rainfallRange: [500, 1200],
-        tempRange: [25, 35],
-      },
-      Red: {
-        crops: ["Groundnut", "Millet", "Tobacco", "Pulses"],
-        phRange: [6.0, 7.0],
-        rainfallRange: [400, 1000],
-        tempRange: [20, 30],
-      },
-      Alluvial: {
-        crops: ["Rice", "Wheat", "Sugarcane", "Vegetables"],
-        phRange: [6.5, 7.5],
-        rainfallRange: [700, 1500],
-        tempRange: [20, 35],
-      },
-      Laterite: {
-        crops: ["Cashew", "Rubber", "Tea", "Coffee"],
-        phRange: [5.5, 6.5],
-        rainfallRange: [1500, 3000],
-        tempRange: [20, 30],
-      },
-    }[soilType];
-
-    if (!recommendations) {
+    const soilRecommendation = recommendations[soilType];
+    
+    if (!soilRecommendation) {
       return "Invalid soil type selected.";
     }
 
-    const { crops, phRange, rainfallRange, tempRange } = recommendations;
-    let suitableCrops = [...crops];
+    const { crops, phRange, rainfallRange, tempRange } = soilRecommendation;
     let conditions = [];
 
     // Check pH suitability
@@ -192,8 +199,6 @@ const CropRecommendation = () => {
       setLoading(false);
     }
   };
-
-  // ... keep existing code (JSX for the form and layout)
 
   return (
     <div className="min-h-screen bg-background flex">
