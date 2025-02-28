@@ -1,31 +1,24 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
-import PhoneForm from "@/components/auth/PhoneForm";
-import OTPForm from "@/components/auth/OTPForm";
 import { useLoginState } from "@/hooks/useLoginState";
-import { handleOTPVerification } from "@/utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const {
     isLoading,
-    showOTP,
-    phone,
-    otp,
-    resendDisabled,
-    resendTimer,
+    email,
+    password,
     setIsLoading,
-    setShowOTP,
-    setPhone,
-    setOTP,
-    setResendDisabled,
-    setResendTimer,
-    startResendTimer
+    setEmail,
+    setPassword
   } = useLoginState();
 
   // Check if user is already logged in
@@ -48,104 +41,38 @@ const Login = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const formatPhoneNumber = (phone: string) => {
-    const digits = phone.replace(/\D/g, '');
-    if (!digits.startsWith('91')) {
-      return `+91${digits}`;
-    }
-    return `+${digits}`;
-  };
-
-  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (!phone) {
+      if (!email || !password) {
         toast({
-          title: "Missing phone number",
-          description: "Please enter your phone number",
+          title: "Missing fields",
+          description: "Please fill in all fields",
           variant: "destructive",
         });
         return;
       }
 
-      const formattedPhone = formatPhoneNumber(phone);
-      console.log("Sending OTP to:", formattedPhone);
-
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
-        options: {
-          shouldCreateUser: true,
-          data: {
-            phone: formattedPhone
-          }
-        }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
       if (error) {
-        console.error("OTP send error:", error);
+        console.error("Login error:", error);
         toast({
-          title: "Failed to send OTP",
+          title: "Login failed",
           description: error.message,
           variant: "destructive",
         });
-      } else {
-        setShowOTP(true);
-        startResendTimer();
-        toast({
-          title: "OTP sent",
-          description: "Please check your phone for the verification code",
-        });
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOTP = () => {
-    handleSendOTP({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>);
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const formattedPhone = formatPhoneNumber(phone);
-      const result = await handleOTPVerification(formattedPhone, otp);
-      
-      if (result.success) {
+      } else if (data.user) {
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
         navigate("/dashboard");
-      } else {
-        // Handle specific error cases
-        if (result.error.includes("expired")) {
-          toast({
-            title: "OTP Expired",
-            description: "The OTP has expired. Please request a new one.",
-            variant: "destructive",
-          });
-          setOTP("");
-          setShowOTP(false);
-          startResendTimer();
-        } else {
-          toast({
-            title: "Verification failed",
-            description: result.error,
-            variant: "destructive",
-          });
-        }
       }
     } catch (error) {
       console.error("Unexpected error:", error);
@@ -168,35 +95,45 @@ const Login = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!showOTP ? (
-            <PhoneForm
-              phone={phone}
-              setPhone={setPhone}
-              isLoading={isLoading}
-              onSubmit={handleSendOTP}
-            />
-          ) : (
-            <OTPForm
-              otp={otp}
-              setOTP={setOTP}
-              isLoading={isLoading}
-              onSubmit={handleVerifyOTP}
-              onResend={handleResendOTP}
-              onChangePhone={() => setShowOTP(false)}
-              resendDisabled={resendDisabled}
-              resendTimer={resendTimer}
-            />
-          )}
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto font-semibold"
-              onClick={() => navigate("/register")}
-            >
-              Register here
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
-          </div>
+            <div className="mt-4 text-center text-sm">
+              Don't have an account?{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto font-semibold"
+                onClick={() => navigate("/register")}
+              >
+                Register here
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
@@ -7,8 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BackButton } from "@/components/ui/back-button";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const Profile = () => {
+  useRequireAuth(); // Require authentication for this page
+  
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -111,6 +115,15 @@ const Profile = () => {
 
       if (error) throw error;
 
+      // Update email in auth if it was changed
+      if (profile.email !== editedProfile.email) {
+        const { error: updateEmailError } = await supabase.auth.updateUser({
+          email: editedProfile.email
+        });
+        
+        if (updateEmailError) throw updateEmailError;
+      }
+
       setProfile(editedProfile);
       setIsEditing(false);
       toast({
@@ -185,21 +198,6 @@ const Profile = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
-                    {isEditing ? (
-                      <Input
-                        value={editedProfile.phone || ''}
-                        onChange={(e) => handleChange('phone', e.target.value)}
-                        placeholder="Enter your phone number"
-                      />
-                    ) : (
-                      <div className="p-2 bg-muted rounded-md">
-                        {profile.phone || 'Not provided'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Email</label>
                     {isEditing ? (
                       <Input
@@ -211,6 +209,21 @@ const Profile = () => {
                     ) : (
                       <div className="p-2 bg-muted rounded-md">
                         {profile.email || 'Not provided'}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.phone || ''}
+                        onChange={(e) => handleChange('phone', e.target.value)}
+                        placeholder="Enter your phone number"
+                      />
+                    ) : (
+                      <div className="p-2 bg-muted rounded-md">
+                        {profile.phone || 'Not provided'}
                       </div>
                     )}
                   </div>
