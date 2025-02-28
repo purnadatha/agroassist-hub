@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLoginState } from "@/hooks/useLoginState";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ const Login = () => {
     setError,
     clearError
   } = useLoginState();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -58,9 +61,8 @@ const Login = () => {
       return false;
     }
     
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Basic email validation - less strict now
+    if (!email.includes('@')) {
       setError("Please enter a valid email address");
       return false;
     }
@@ -78,6 +80,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Try to sign in with the provided credentials
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -86,38 +89,47 @@ const Login = () => {
       if (authError) {
         console.error("Login error:", authError);
         
-        // Handle specific error codes
+        // Handling specific error messages more user-friendly
         if (authError.message.includes("Invalid login credentials")) {
-          setError("Invalid email or password. Please try again.");
+          setError("Incorrect email or password. Please try again or create an account.");
+          
+          // Debug info - shows the error in the console but doesn't show to the user
+          console.log("Auth error details:", authError);
         } else if (authError.message.includes("Email not confirmed")) {
-          setError("Please confirm your email address before logging in.");
+          setError("Please check your email inbox to confirm your account before logging in.");
         } else {
-          setError(authError.message || "Login failed. Please try again.");
+          setError("Login failed. Please check your credentials and try again.");
         }
         
         toast({
           title: "Login failed",
-          description: "Please check your credentials and try again.",
+          description: "Check your credentials or try registering for a new account.",
           variant: "destructive",
         });
       } else if (data.user) {
         toast({
           title: "Login successful",
-          description: "Welcome back!",
+          description: "Welcome back to AgroTrack!",
         });
         navigate("/dashboard");
       }
     } catch (unexpectedError) {
       console.error("Unexpected error:", unexpectedError);
-      setError("An unexpected error occurred. Please try again.");
+      setError("An unexpected error occurred. Please try again later.");
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "Connection issue. Please check your internet and try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // For debugging - let's add an option to auto-fill test credentials
+  const fillTestCredentials = () => {
+    setEmail("test@example.com");
+    setPassword("password123");
   };
 
   return (
@@ -150,10 +162,19 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button 
+                  type="button" 
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "Hide" : "Show"} password
+                </button>
+              </div>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
@@ -164,15 +185,23 @@ const Login = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
+            
+            {/* For testing purposes */}
+            <div className="text-center">
+              <button 
+                type="button" 
+                onClick={fillTestCredentials}
+                className="text-xs text-muted-foreground hover:text-primary hover:underline"
+              >
+                Fill test credentials
+              </button>
+            </div>
+            
             <div className="mt-4 text-center text-sm">
               Don't have an account?{" "}
-              <Button
-                variant="link"
-                className="p-0 h-auto font-semibold"
-                onClick={() => navigate("/register")}
-              >
+              <Link to="/register" className="text-primary font-semibold hover:underline">
                 Register here
-              </Button>
+              </Link>
             </div>
           </form>
         </CardContent>

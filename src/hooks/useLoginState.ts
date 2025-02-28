@@ -22,10 +22,18 @@ export const useLoginState = () => {
 
   const setEmail = (email: string) => {
     setState(prev => ({ ...prev, email }));
+    // Clear error when user starts typing
+    if (state.error && state.error.includes("email")) {
+      clearError();
+    }
   };
 
   const setPassword = (password: string) => {
     setState(prev => ({ ...prev, password }));
+    // Clear error when user starts typing
+    if (state.error && state.error.includes("password")) {
+      clearError();
+    }
   };
 
   const setError = (error: string | null) => {
