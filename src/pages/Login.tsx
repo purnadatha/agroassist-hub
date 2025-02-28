@@ -126,10 +126,12 @@ const Login = () => {
     }
   };
 
-  // For debugging - let's add an option to auto-fill test credentials
+  // For testing - use these test credentials which work with the system
   const fillTestCredentials = () => {
-    setEmail("test@example.com");
-    setPassword("password123");
+    setEmail("demo@agrotrack.com");
+    setPassword("demo123");
+    // Clear any previous errors when filling test credentials
+    clearError();
   };
 
   return (
@@ -186,15 +188,19 @@ const Login = () => {
               {isLoading ? "Logging in..." : "Login"}
             </Button>
             
-            {/* For testing purposes */}
-            <div className="text-center">
-              <button 
-                type="button" 
+            {/* Test credentials button - more prominent now */}
+            <div className="text-center mt-2">
+              <Button
+                type="button"
                 onClick={fillTestCredentials}
-                className="text-xs text-muted-foreground hover:text-primary hover:underline"
+                variant="outline"
+                className="text-sm w-full"
               >
-                Fill test credentials
-              </button>
+                Use Demo Credentials
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">
+                (Email: demo@agrotrack.com / Password: demo123)
+              </p>
             </div>
             
             <div className="mt-4 text-center text-sm">
