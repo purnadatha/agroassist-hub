@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLoginState } from "@/hooks/useLoginState";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
@@ -25,10 +25,6 @@ const Login = () => {
     setError,
     clearError
   } = useLoginState();
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [loginAttempts, setLoginAttempts] = useState(0);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -96,15 +92,9 @@ const Login = () => {
       if (authError) {
         console.error("Login error:", authError);
         
-        setLoginAttempts(prev => prev + 1);
-        
         // Handling specific error messages more user-friendly
         if (authError.message.includes("Invalid login credentials")) {
-          if (loginAttempts >= 2) {
-            setError("Multiple login attempts failed. Please verify your credentials or use the 'Create & Login with Demo Account' option below.");
-          } else {
-            setError("The email or password you entered is incorrect. Please try again or reset your password.");
-          }
+          setError("The email or password you entered is incorrect. Please verify your credentials or register for an account if you don't have one.");
           
           // Debug info - shows the error in the console but doesn't show to the user
           console.log("Auth error details:", authError);
@@ -139,96 +129,6 @@ const Login = () => {
     }
   };
 
-  // Create or use demo account
-  const createAndLoginWithDemoAccount = async () => {
-    clearError();
-    setIsLoading(true);
-    
-    const demoEmail = "demo@agrotrack.com";
-    const demoPassword = "demo123";
-    
-    try {
-      // First check if we can login with the demo account
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: demoEmail,
-        password: demoPassword,
-      });
-      
-      if (signInError) {
-        console.log("Demo account login failed, attempting to create account:", signInError);
-        
-        // If login fails, create the demo account
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: demoEmail,
-          password: demoPassword,
-          options: {
-            data: {
-              full_name: "Demo User",
-              phone: "1234567890",
-              email: demoEmail
-            }
-          }
-        });
-
-        if (signUpError) {
-          console.error("Demo account creation error:", signUpError);
-          setError("Couldn't create demo account: " + signUpError.message);
-        } else {
-          // Check if email confirmation is required
-          if (data?.user?.identities?.length === 0) {
-            setRegistrationSuccess(true);
-            setEmail(demoEmail);
-            setPassword(demoPassword);
-            toast({
-              title: "Demo account created",
-              description: "Please check the demo email inbox for a confirmation link, or login once confirmed.",
-            });
-          } else {
-            // Try to automatically sign in with the new account
-            const { data: autoSignInData, error: autoSignInError } = await supabase.auth.signInWithPassword({
-              email: demoEmail,
-              password: demoPassword,
-            });
-            
-            if (autoSignInError) {
-              setRegistrationSuccess(true);
-              setEmail(demoEmail);
-              setPassword(demoPassword);
-              toast({
-                title: "Demo account created",
-                description: "Demo credentials are now filled in. Please click Login to sign in.",
-              });
-            } else if (autoSignInData.user) {
-              toast({
-                title: "Demo login successful",
-                description: "You are now logged in with the demo account.",
-              });
-              navigate("/dashboard");
-            }
-          }
-        }
-      } else if (signInData.user) {
-        // Login was successful
-        toast({
-          title: "Demo login successful",
-          description: "You are now logged in with the demo account.",
-        });
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      setError("An unexpected error occurred. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const useDemoCredentials = () => {
-    setEmail("demo@agrotrack.com");
-    setPassword("demo123");
-    clearError();
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -242,18 +142,6 @@ const Login = () => {
             <Alert variant="destructive" className="mb-4">
               <AlertDescription>
                 {error}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {registrationSuccess && (
-            <Alert className="mb-4 bg-green-50 border-green-200">
-              <AlertDescription className="text-green-700">
-                Demo account is ready to use. Click Login with the following credentials:
-                <div className="font-medium mt-1">
-                  Email: demo@agrotrack.com<br/>
-                  Password: demo123
-                </div>
               </AlertDescription>
             </Alert>
           )}
@@ -272,19 +160,10 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <Label htmlFor="password">Password</Label>
-                <button 
-                  type="button" 
-                  className="text-xs text-primary hover:underline"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "Hide" : "Show"} password
-                </button>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type={showPassword ? "text" : "password"}
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
@@ -295,31 +174,6 @@ const Login = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
-            
-            {/* Demo account options */}
-            <div className="flex flex-col gap-2 mt-2">
-              <Button
-                type="button"
-                onClick={useDemoCredentials}
-                variant="outline"
-                className="text-sm"
-              >
-                Use Demo Credentials
-              </Button>
-              
-              <Button
-                type="button"
-                onClick={createAndLoginWithDemoAccount}
-                variant="secondary"
-                className="text-sm"
-              >
-                Create & Login with Demo Account
-              </Button>
-              
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                Demo: demo@agrotrack.com / Password: demo123
-              </p>
-            </div>
             
             <div className="mt-4 text-center text-sm">
               Don't have an account?{" "}
