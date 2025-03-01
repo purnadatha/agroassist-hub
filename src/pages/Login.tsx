@@ -83,37 +83,42 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // Clean up email by trimming whitespace
+      const cleanEmail = email.trim().toLowerCase();
+      
       // Try to sign in with the provided credentials
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
 
       if (authError) {
         console.error("Login error:", authError);
         
-        // Handling specific error messages more user-friendly
+        // Handle specific error cases
         if (authError.message.includes("Invalid login credentials")) {
           setError("The email or password you entered is incorrect. Please verify your credentials or register for an account if you don't have one.");
-          
-          // Debug info - shows the error in the console but doesn't show to the user
-          console.log("Auth error details:", authError);
         } else if (authError.message.includes("Email not confirmed")) {
-          setError("Please check your email inbox to confirm your account before logging in.");
+          setError("Please check your email inbox and confirm your account before logging in.");
         } else {
-          setError(`Login failed: ${authError.message}. Please check your credentials and try again.`);
+          setError(`Login failed: ${authError.message}`);
         }
         
         toast({
           title: "Login failed",
-          description: "Check your credentials or try registering for a new account.",
+          description: "Please check your credentials and try again.",
           variant: "destructive",
         });
       } else if (data.user) {
+        // Clear any existing errors on successful login
+        clearError();
+        
         toast({
           title: "Login successful",
           description: "Welcome back to AgroTrack!",
         });
+        
+        // Navigate to dashboard on successful login
         navigate("/dashboard");
       }
     } catch (unexpectedError) {
