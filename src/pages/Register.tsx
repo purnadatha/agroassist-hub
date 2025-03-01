@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Register = () => {
@@ -22,17 +21,6 @@ const Register = () => {
     pan: '',
   });
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
-    checkSession();
-  }, [navigate]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -45,79 +33,18 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      // Validate passwords match
-      if (formData.password !== formData.confirmPassword) {
-        toast({
-          title: "Passwords don't match",
-          description: "Please ensure both passwords match",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate Aadhar number
-      if (formData.aadhar && !/^\d{12}$/.test(formData.aadhar)) {
-        toast({
-          title: "Invalid Aadhar Number",
-          description: "Please enter a valid 12-digit Aadhar number",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate PAN number
-      if (formData.pan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan)) {
-        toast({
-          title: "Invalid PAN Number",
-          description: "Please enter a valid PAN number (e.g., ABCDE1234F)",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      // Register with Supabase
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            phone: formData.phone,
-            aadhar_number: formData.aadhar,
-            pan_number: formData.pan,
-            email: formData.email
-          }
-        }
-      });
-
-      if (signUpError) throw signUpError;
-
-      if (!authData.user) {
-        throw new Error("User creation failed");
-      }
-
+    // Simulate a small delay to show loading state
+    setTimeout(() => {
       toast({
         title: "Registration successful!",
-        description: "Please proceed to login",
+        description: "You can now log in",
       });
       
-      await supabase.auth.signOut();
+      // Navigate to login page after registration
       navigate("/login");
       
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      toast({
-        title: "Registration failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
       setIsLoading(false);
-    }
+    }, 500);
   };
 
   return (
@@ -139,7 +66,6 @@ const Register = () => {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Enter your full name"
-                required
                 disabled={isLoading}
               />
             </div>
@@ -153,7 +79,6 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                required
                 disabled={isLoading}
               />
             </div>
@@ -167,7 +92,6 @@ const Register = () => {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="Enter your phone number"
-                required
                 disabled={isLoading}
               />
             </div>
@@ -181,9 +105,7 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Create a password"
-                required
                 disabled={isLoading}
-                minLength={6}
               />
             </div>
             
@@ -196,9 +118,7 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm your password"
-                required
                 disabled={isLoading}
-                minLength={6}
               />
             </div>
             
@@ -212,9 +132,6 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Enter your 12-digit Aadhar number"
                 disabled={isLoading}
-                minLength={12}
-                maxLength={12}
-                pattern="\d{12}"
               />
             </div>
             
@@ -228,9 +145,6 @@ const Register = () => {
                 onChange={handleChange}
                 placeholder="Enter your 10-character PAN number"
                 disabled={isLoading}
-                minLength={10}
-                maxLength={10}
-                pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
               />
             </div>
             
