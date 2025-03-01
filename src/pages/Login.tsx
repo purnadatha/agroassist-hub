@@ -28,6 +28,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -50,8 +51,8 @@ const Login = () => {
   }, [navigate]);
 
   const validateEmail = (email: string) => {
-    // Basic email validation regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Enhanced email validation regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(email);
   };
 
@@ -95,16 +96,22 @@ const Login = () => {
       if (authError) {
         console.error("Login error:", authError);
         
+        setLoginAttempts(prev => prev + 1);
+        
         // Handling specific error messages more user-friendly
         if (authError.message.includes("Invalid login credentials")) {
-          setError("The email or password you entered is incorrect. Please try again.");
+          if (loginAttempts >= 2) {
+            setError("Multiple login attempts failed. Please verify your credentials or use the 'Create & Login with Demo Account' option below.");
+          } else {
+            setError("The email or password you entered is incorrect. Please try again or reset your password.");
+          }
           
           // Debug info - shows the error in the console but doesn't show to the user
           console.log("Auth error details:", authError);
         } else if (authError.message.includes("Email not confirmed")) {
           setError("Please check your email inbox to confirm your account before logging in.");
         } else {
-          setError("Login failed. Please check your credentials and try again.");
+          setError(`Login failed: ${authError.message}. Please check your credentials and try again.`);
         }
         
         toast({
@@ -141,66 +148,72 @@ const Login = () => {
     const demoPassword = "demo123";
     
     try {
-      // First try to create the demo account
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // First check if we can login with the demo account
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: demoEmail,
         password: demoPassword,
-        options: {
-          data: {
-            full_name: "Demo User",
-            phone: "1234567890",
-            email: demoEmail
-          }
-        }
       });
-
-      if (signUpError) {
-        console.error("Demo account creation error:", signUpError);
+      
+      if (signInError) {
+        console.log("Demo account login failed, attempting to create account:", signInError);
         
-        // If user already exists, try to login directly
-        if (signUpError.message.includes("already registered")) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: demoEmail,
-            password: demoPassword,
-          });
-          
-          if (signInError) {
-            console.error("Demo login error:", signInError);
-            setError("Couldn't log in with demo account. Please try again.");
-          } else if (signInData.user) {
-            toast({
-              title: "Demo login successful",
-              description: "You are now logged in with the demo account.",
-            });
-            navigate("/dashboard");
-          }
-        } else {
-          setError("Couldn't create demo account: " + signUpError.message);
-        }
-      } else if (data.user) {
-        // Account created, now try to log in
-        setEmail(demoEmail);
-        setPassword(demoPassword);
-        
-        // Try to automatically sign in with the new account
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        // If login fails, create the demo account
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email: demoEmail,
           password: demoPassword,
+          options: {
+            data: {
+              full_name: "Demo User",
+              phone: "1234567890",
+              email: demoEmail
+            }
+          }
         });
-        
-        if (signInError) {
-          setRegistrationSuccess(true);
-          toast({
-            title: "Demo account created",
-            description: "Demo account has been created successfully. Please login.",
-          });
-        } else if (signInData.user) {
-          toast({
-            title: "Demo login successful",
-            description: "You are now logged in with the demo account.",
-          });
-          navigate("/dashboard");
+
+        if (signUpError) {
+          console.error("Demo account creation error:", signUpError);
+          setError("Couldn't create demo account: " + signUpError.message);
+        } else {
+          // Check if email confirmation is required
+          if (data?.user?.identities?.length === 0) {
+            setRegistrationSuccess(true);
+            setEmail(demoEmail);
+            setPassword(demoPassword);
+            toast({
+              title: "Demo account created",
+              description: "Please check the demo email inbox for a confirmation link, or login once confirmed.",
+            });
+          } else {
+            // Try to automatically sign in with the new account
+            const { data: autoSignInData, error: autoSignInError } = await supabase.auth.signInWithPassword({
+              email: demoEmail,
+              password: demoPassword,
+            });
+            
+            if (autoSignInError) {
+              setRegistrationSuccess(true);
+              setEmail(demoEmail);
+              setPassword(demoPassword);
+              toast({
+                title: "Demo account created",
+                description: "Demo credentials are now filled in. Please click Login to sign in.",
+              });
+            } else if (autoSignInData.user) {
+              toast({
+                title: "Demo login successful",
+                description: "You are now logged in with the demo account.",
+              });
+              navigate("/dashboard");
+            }
+          }
         }
+      } else if (signInData.user) {
+        // Login was successful
+        toast({
+          title: "Demo login successful",
+          description: "You are now logged in with the demo account.",
+        });
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error("Unexpected error:", error);
@@ -208,6 +221,12 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const useDemoCredentials = () => {
+    setEmail("demo@agrotrack.com");
+    setPassword("demo123");
+    clearError();
   };
 
   return (
@@ -277,18 +296,28 @@ const Login = () => {
               {isLoading ? "Logging in..." : "Login"}
             </Button>
             
-            {/* Demo account creation button */}
-            <div className="text-center mt-2">
+            {/* Demo account options */}
+            <div className="flex flex-col gap-2 mt-2">
+              <Button
+                type="button"
+                onClick={useDemoCredentials}
+                variant="outline"
+                className="text-sm"
+              >
+                Use Demo Credentials
+              </Button>
+              
               <Button
                 type="button"
                 onClick={createAndLoginWithDemoAccount}
-                variant="outline"
-                className="text-sm w-full"
+                variant="secondary"
+                className="text-sm"
               >
                 Create & Login with Demo Account
               </Button>
-              <p className="text-xs text-muted-foreground mt-1">
-                (Email: demo@agrotrack.com / Password: demo123)
+              
+              <p className="text-xs text-muted-foreground text-center mt-1">
+                Demo: demo@agrotrack.com / Password: demo123
               </p>
             </div>
             
