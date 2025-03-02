@@ -1,9 +1,9 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { useSpeech } from "@/hooks/useSpeech";
 
@@ -21,34 +21,17 @@ interface AppliedScheme {
 
 const Dashboard = () => {
   const [appliedSchemes, setAppliedSchemes] = useState<AppliedScheme[]>([]);
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState("Farmer");
   const { speak } = useSpeech();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile?.full_name) {
-            setUserName(profile.full_name);
-            speak(`Welcome back, ${profile.full_name}!`);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
-
+    // Welcome message
+    speak(`Welcome to AgroTrack, ${userName}!`);
+    
+    // Load any saved schemes from local storage
     const schemes = JSON.parse(localStorage.getItem("appliedSchemes") || "[]");
     setAppliedSchemes(schemes);
-    fetchUserProfile();
-  }, [speak]);
+  }, [speak, userName]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -59,7 +42,7 @@ const Dashboard = () => {
         </div>
         <main className="p-4">
           <h1 className="text-2xl font-bold text-primary mb-1">Dashboard</h1>
-          <p className="text-gray-600 mb-6">Welcome back, {userName || 'User'}!</p>
+          <p className="text-gray-600 mb-6">Welcome, {userName}!</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <WeatherWidget />

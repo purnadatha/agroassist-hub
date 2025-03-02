@@ -1,8 +1,8 @@
-import { Home, ShoppingBag, Tractor, Landmark, LogOut, Sprout, User } from "lucide-react";
+
+import { Home, ShoppingBag, Tractor, Landmark, Sprout, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 export const Sidebar = () => {
@@ -11,27 +11,6 @@ export const Sidebar = () => {
   const { toast } = useToast();
 
   const isActive = (path: string) => location.pathname === path;
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Logged out successfully",
-        description: "See you soon!",
-      });
-      
-      navigate("/");
-    } catch (error) {
-      console.error("Error logging out:", error);
-      toast({
-        title: "Error logging out",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="w-64 bg-background border-r p-4 hidden md:block">
@@ -93,16 +72,6 @@ export const Sidebar = () => {
           >
             <Landmark className="mr-2 h-4 w-4" />
             Loans
-          </Button>
-        </div>
-        <div className="mt-auto">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
           </Button>
         </div>
       </div>

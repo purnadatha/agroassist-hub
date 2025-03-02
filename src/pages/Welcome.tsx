@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -16,17 +17,11 @@ const Welcome = () => {
           </p>
           <div className="space-x-4">
             <Button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/dashboard")}
               className="bg-primary hover:bg-primary/90"
+              size="lg"
             >
-              Login
-            </Button>
-            <Button
-              onClick={() => navigate("/register")}
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary/10"
-            >
-              Register
+              Get Started
             </Button>
           </div>
         </div>
