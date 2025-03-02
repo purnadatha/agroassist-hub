@@ -4,84 +4,36 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BackButton } from "@/components/ui/back-button";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const Profile = () => {
-  useRequireAuth(); // Require authentication for this page
+  useRequireAuth(); // This no longer enforces authentication
   
-  const [profile, setProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<any>({
+    full_name: "Demo User",
+    email: "user@example.com",
+    phone: "9876543210",
+    aadhar_number: "123456789012",
+    pan_number: "ABCDE1234F"
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchProfile();
+    // No need to fetch profile, using demo data
+    setEditedProfile(profile);
+    setIsLoading(false);
   }, []);
-
-  const fetchProfile = async () => {
-    try {
-      setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "Not authenticated",
-          description: "Please login to view your profile",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      
-      if (!data) {
-        toast({
-          title: "Profile not found",
-          description: "We couldn't find your profile information",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setProfile(data);
-      setEditedProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile information",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) {
-        toast({
-          title: "Not authenticated",
-          description: "Please login to update your profile",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Validate Aadhar number
       if (editedProfile.aadhar_number && !/^\d{12}$/.test(editedProfile.aadhar_number)) {
         toast({
@@ -102,30 +54,10 @@ const Profile = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: editedProfile.full_name,
-          email: editedProfile.email,
-          phone: editedProfile.phone,
-          aadhar_number: editedProfile.aadhar_number,
-          pan_number: editedProfile.pan_number
-        })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
-
-      // Update email in auth if it was changed
-      if (profile.email !== editedProfile.email) {
-        const { error: updateEmailError } = await supabase.auth.updateUser({
-          email: editedProfile.email
-        });
-        
-        if (updateEmailError) throw updateEmailError;
-      }
-
+      // Update local profile state (not saving to database)
       setProfile(editedProfile);
       setIsEditing(false);
+      
       toast({
         title: "Success",
         description: "Profile updated successfully",
