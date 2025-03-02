@@ -25,8 +25,14 @@ const Dashboard = () => {
   const { speak } = useSpeech();
 
   useEffect(() => {
+    // Check if we have a saved user name in localStorage
+    const savedName = localStorage.getItem("userName");
+    if (savedName) {
+      setUserName(savedName);
+    }
+    
     // Welcome message
-    speak(`Welcome to AgroTrack, ${userName}!`);
+    speak(`Welcome to AgroTrack, ${savedName || userName}!`);
     
     // Load any saved schemes from local storage
     const schemes = JSON.parse(localStorage.getItem("appliedSchemes") || "[]");

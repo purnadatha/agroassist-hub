@@ -25,7 +25,11 @@ const Profile = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // No need to fetch profile, using demo data
+    // Check if we have saved profile data in localStorage
+    const savedProfile = localStorage.getItem("userProfile");
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
     setEditedProfile(profile);
     setIsLoading(false);
   }, []);
@@ -54,8 +58,15 @@ const Profile = () => {
         return;
       }
 
-      // Update local profile state (not saving to database)
+      // Update local profile state
       setProfile(editedProfile);
+      
+      // Save to localStorage for persistence across pages
+      localStorage.setItem("userProfile", JSON.stringify(editedProfile));
+      
+      // Save name separately for easy access from Dashboard
+      localStorage.setItem("userName", editedProfile.full_name);
+      
       setIsEditing(false);
       
       toast({
