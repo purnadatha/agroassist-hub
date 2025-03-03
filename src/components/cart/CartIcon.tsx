@@ -14,7 +14,24 @@ export const CartIcon = () => {
   const toggleCart = () => setIsOpen(!isOpen);
 
   const handleBuyNow = () => {
-    window.location.href = "https://mail.google.com";
+    const subject = encodeURIComponent('Inquiry about items in my cart');
+    
+    // Create a detailed body with all items in the cart
+    let bodyContent = 'Hello,\n\nI am interested in purchasing the following items:\n\n';
+    
+    items.forEach(item => {
+      bodyContent += `- ${item.name} (${item.type})\n`;
+      bodyContent += `  Quantity: ${item.quantity}\n`;
+      bodyContent += `  Price: ₹${item.price}${item.type === 'tool' ? '/day' : ''}\n\n`;
+    });
+    
+    bodyContent += `Total Amount: ₹${getTotalPrice().toFixed(2)}\n\n`;
+    bodyContent += 'Please let me know how to proceed with the purchase.\n\nThank you!';
+    
+    const body = encodeURIComponent(bodyContent);
+    
+    // Open the email client with the composed message
+    window.location.href = `mailto:seller@agrotrack.com?subject=${subject}&body=${body}`;
   };
 
   return (
