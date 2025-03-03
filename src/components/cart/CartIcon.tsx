@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ShoppingCart, X, Trash2 } from 'lucide-react';
+import { ShoppingCart, X, Trash2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,6 +12,10 @@ export const CartIcon = () => {
   const { items, removeFromCart, clearCart, getItemCount, getTotalPrice } = useCart();
   
   const toggleCart = () => setIsOpen(!isOpen);
+
+  const handleBuyNow = () => {
+    window.location.href = "https://mail.google.com";
+  };
 
   return (
     <div className="relative">
@@ -83,10 +87,16 @@ export const CartIcon = () => {
                   <p className="font-medium">Total:</p>
                   <p className="text-muted-foreground">₹{getTotalPrice().toFixed(2)}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={clearCart}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Clear Cart
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={clearCart}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Clear Cart
+                  </Button>
+                  <Button variant="default" size="sm" onClick={handleBuyNow}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Buy Now
+                  </Button>
+                </div>
               </CardFooter>
             </>
           )}
