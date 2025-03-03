@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2, PlusCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Product } from "./types";
 import { useEffect, useState } from "react";
+import { useCart } from "@/context/CartContext";
 
 const fetchProducts = async () => {
   const { data, error } = await supabase
@@ -21,6 +22,7 @@ const BuyingPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { addToCart } = useCart();
   
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -92,6 +94,17 @@ const BuyingPage = () => {
     });
   };
 
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      id: product.id,
+      name: product.product_name,
+      price: product.price,
+      image: product.image_url,
+      quantity: 1,
+      type: 'product'
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {products.map((product) => (
@@ -137,13 +150,23 @@ const BuyingPage = () => {
               <p className="text-sm line-clamp-2">
                 <span className="font-medium">Description:</span> {product.description}
               </p>
-              <Button
-                className="w-full mt-4"
-                onClick={() => handleBuy(product)}
-              >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Buy Now
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  className="flex-1"
+                  onClick={() => handleBuy(product)}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Buy Now
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => handleAddToCart(product)}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Tractor, Trash2 } from "lucide-react";
+import { Tractor, Trash2, PlusCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useCart } from "@/context/CartContext";
 
 interface Tool {
   id: string;
@@ -32,6 +33,7 @@ const RentingPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { addToCart } = useCart();
   
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -103,6 +105,18 @@ const RentingPage = () => {
     });
   };
 
+  const handleAddToCart = (tool: Tool) => {
+    addToCart({
+      id: tool.id,
+      name: tool.tool_name,
+      price: tool.price_per_day,
+      image: tool.image_url,
+      quantity: 1,
+      type: 'tool',
+      duration: tool.rental_duration
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {tools.map((tool) => (
@@ -148,13 +162,23 @@ const RentingPage = () => {
               <p className="text-sm line-clamp-2">
                 <span className="font-medium">Description:</span> {tool.description}
               </p>
-              <Button
-                className="w-full mt-4"
-                onClick={() => handleRent(tool)}
-              >
-                <Tractor className="mr-2 h-4 w-4" />
-                Rent Now
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  className="flex-1"
+                  onClick={() => handleRent(tool)}
+                >
+                  <Tractor className="mr-2 h-4 w-4" />
+                  Rent Now
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => handleAddToCart(tool)}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

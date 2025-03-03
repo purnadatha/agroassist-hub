@@ -12,6 +12,7 @@ import RentTools from "./pages/RentTools";
 import Loans from "./pages/Loans";
 import CropRecommendation from "./pages/CropRecommendation";
 import Profile from "./pages/Profile";
+import { CartProvider } from "./context/CartContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
