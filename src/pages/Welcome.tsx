@@ -17,11 +17,18 @@ const Welcome = () => {
           </p>
           <div className="space-x-4">
             <Button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/login")}
               className="bg-primary hover:bg-primary/90"
               size="lg"
             >
-              Get Started
+              Login
+            </Button>
+            <Button
+              onClick={() => navigate("/register")}
+              variant="outline"
+              size="lg"
+            >
+              Register
             </Button>
           </div>
         </div>

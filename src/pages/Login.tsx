@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,7 +20,7 @@ const Login = () => {
     
     // Simulate a small delay to show loading state
     setTimeout(() => {
-      // Success toast
+      // Show success toast
       toast({
         title: "Login successful",
         description: "Welcome to AgroTrack!",
@@ -72,9 +71,13 @@ const Login = () => {
             
             <div className="mt-4 text-center text-sm">
               Don't have an account?{" "}
-              <Link to="/register" className="text-primary font-semibold hover:underline">
+              <Button
+                variant="link"
+                className="p-0 h-auto font-semibold"
+                onClick={() => navigate("/register")}
+              >
                 Register here
-              </Link>
+              </Button>
             </div>
           </form>
         </CardContent>

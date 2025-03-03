@@ -17,8 +17,6 @@ const Register = () => {
     phone: '',
     password: '',
     confirmPassword: '',
-    aadhar: '',
-    pan: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,32 +116,6 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm your password"
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="aadhar">Aadhar Number</Label>
-              <Input 
-                id="aadhar"
-                name="aadhar"
-                type="text"
-                value={formData.aadhar}
-                onChange={handleChange}
-                placeholder="Enter your 12-digit Aadhar number"
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="pan">PAN Number</Label>
-              <Input 
-                id="pan"
-                name="pan"
-                type="text"
-                value={formData.pan}
-                onChange={handleChange}
-                placeholder="Enter your 10-character PAN number"
                 disabled={isLoading}
               />
             </div>
