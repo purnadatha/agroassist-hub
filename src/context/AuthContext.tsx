@@ -12,6 +12,7 @@ type AuthContextType = {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<{ error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,10 +81,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       console.log("Registration success:", data);
-      toast({
-        title: "Registration successful",
-        description: "Please check your email for confirmation or proceed to login",
-      });
+      
+      if (!data.session) {
+        // User needs to verify email
+        toast({
+          title: "Registration successful",
+          description: "Please check your email for confirmation or use the 'Resend verification email' option below the login form if you didn't receive it.",
+          duration: 6000,
+        });
+      } else {
+        // Auto sign-in successful (email verification might be disabled)
+        toast({
+          title: "Registration successful",
+          description: "You have been automatically logged in!",
+        });
+        navigate("/dashboard");
+        return { error: null };
+      }
       
       navigate("/login");
       return { error: null };
@@ -103,11 +117,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error("Login error:", error.message);
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Special handling for unverified email
+        if (error.message.includes("Email not confirmed") || 
+            error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Login failed",
+            description: "Your email may not be verified or credentials are incorrect. Please check your email for a verification link or use the 'Resend verification email' option below.",
+            variant: "destructive",
+            duration: 6000,
+          });
+        } else {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return { error };
       }
 
@@ -118,6 +144,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       navigate("/dashboard");
+      return { error: null };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendVerificationEmail = async (email: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+        }
+      });
+
+      if (error) {
+        console.error("Failed to resend verification email:", error.message);
+        toast({
+          title: "Failed to resend verification email",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error };
+      }
+
+      toast({
+        title: "Verification email sent",
+        description: "Please check your inbox and spam folders.",
+        duration: 5000,
+      });
+      
       return { error: null };
     } finally {
       setIsLoading(false);
@@ -148,7 +208,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, isLoading, signUp, signIn, signOut }}
+      value={{ 
+        user, 
+        session, 
+        isLoading, 
+        signUp, 
+        signIn, 
+        signOut, 
+        resendVerificationEmail 
+      }}
     >
       {children}
     </AuthContext.Provider>

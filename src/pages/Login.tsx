@@ -22,7 +22,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, resendVerificationEmail } = useAuth();
+  const [emailForResend, setEmailForResend] = useState("");
+  const [isResending, setIsResending] = useState(false);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -33,10 +35,28 @@ const Login = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
+    setEmailForResend(values.email); // Save email for potential resend
     const { error } = await signIn(values.email, values.password);
     if (!error) {
       form.reset();
     }
+  };
+
+  const handleResendVerification = async () => {
+    const email = emailForResend || form.getValues().email;
+    
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address in the form above first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsResending(true);
+    await resendVerificationEmail(email);
+    setIsResending(false);
   };
 
   return (
@@ -63,6 +83,10 @@ const Login = () => {
                         placeholder="Enter your email"
                         autoComplete="email"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setEmailForResend(e.target.value);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -94,7 +118,19 @@ const Login = () => {
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
               
-              <div className="mt-4 text-center text-sm">
+              <div className="mt-4 text-center">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isResending}
+                  className="text-sm underline text-primary/80 hover:text-primary"
+                >
+                  {isResending ? "Sending..." : "Resend verification email"}
+                </Button>
+              </div>
+              
+              <div className="mt-2 text-center text-sm">
                 Don't have an account?{" "}
                 <Button
                   variant="link"
