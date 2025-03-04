@@ -15,6 +15,8 @@ import Loans from "./pages/Loans";
 import CropRecommendation from "./pages/CropRecommendation";
 import Profile from "./pages/Profile";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,26 +31,52 @@ const queryClient = new QueryClient({
 const App = () => (
   <ThemeProvider defaultTheme="system" storageKey="agrotrack-theme">
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter basename="/">
-            <Routes>
-              <Route index element={<Welcome />} />
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="marketplace" element={<Marketplace />} />
-              <Route path="rent-tools" element={<RentTools />} />
-              <Route path="loans" element={<Loans />} />
-              <Route path="crop-recommendation" element={<CropRecommendation />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
+      <BrowserRouter basename="/">
+        <AuthProvider>
+          <CartProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route index element={<Welcome />} />
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+                <Route path="dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="marketplace" element={
+                  <ProtectedRoute>
+                    <Marketplace />
+                  </ProtectedRoute>
+                } />
+                <Route path="rent-tools" element={
+                  <ProtectedRoute>
+                    <RentTools />
+                  </ProtectedRoute>
+                } />
+                <Route path="loans" element={
+                  <ProtectedRoute>
+                    <Loans />
+                  </ProtectedRoute>
+                } />
+                <Route path="crop-recommendation" element={
+                  <ProtectedRoute>
+                    <CropRecommendation />
+                  </ProtectedRoute>
+                } />
+                <Route path="profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </TooltipProvider>
+          </CartProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   </ThemeProvider>
 );

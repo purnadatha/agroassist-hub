@@ -6,43 +6,44 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { FormMessage, Form, FormItem, FormField, FormControl } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const registerSchema = z.object({
+  fullName: z.string().min(3, { message: "Name must be at least 3 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
+  const { signUp, isLoading } = useAuth();
+  
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate a small delay to show loading state
-    setTimeout(() => {
-      toast({
-        title: "Registration successful!",
-        description: "You can now log in",
-      });
-      
-      // Navigate to login page after registration
-      navigate("/login");
-      
-      setIsLoading(false);
-    }, 500);
+  const onSubmit = async (values: RegisterFormValues) => {
+    const { error } = await signUp(values.email, values.password, values.fullName);
+    if (!error) {
+      form.reset();
+    }
   };
 
   return (
@@ -54,87 +55,103 @@ const Register = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input 
-                id="fullName"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
                 name="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <FormControl>
+                      <Input 
+                        id="fullName"
+                        placeholder="Enter your full name"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email"
+              
+              <FormField
+                control={form.control}
                 name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <FormControl>
+                      <Input 
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input 
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter your phone number"
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password"
+              
+              <FormField
+                control={form.control}
                 name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create a password"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <FormControl>
+                      <Input 
+                        id="password"
+                        type="password"
+                        placeholder="Create a password"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input 
-                id="confirmPassword"
+              
+              <FormField
+                control={form.control}
                 name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <FormControl>
+                      <Input 
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm your password"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Registering..." : "Register"}
-            </Button>
-            
-            <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Button
-                variant="link"
-                className="p-0 h-auto font-semibold"
-                onClick={() => navigate("/login")}
-              >
-                Login here
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Registering..." : "Register"}
               </Button>
-            </div>
-          </form>
+              
+              <div className="mt-4 text-center text-sm">
+                Already have an account?{" "}
+                <Button
+                  variant="link"
+                  className="p-0 h-auto font-semibold"
+                  onClick={() => navigate("/login")}
+                >
+                  Login here
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

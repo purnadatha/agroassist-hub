@@ -7,32 +7,47 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BackButton } from "@/components/ui/back-button";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/context/AuthContext";
 
 const Profile = () => {
-  useRequireAuth(); // This no longer enforces authentication
+  const { user, signOut } = useAuth();
   
   const [profile, setProfile] = useState<any>({
-    full_name: "Demo User",
-    email: "user@example.com",
-    phone: "9876543210",
-    aadhar_number: "123456789012",
-    pan_number: "ABCDE1234F"
+    full_name: "",
+    email: "",
+    phone: "",
+    aadhar_number: "",
+    pan_number: ""
   });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have saved profile data in localStorage
-    const savedProfile = localStorage.getItem("userProfile");
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
+    if (user) {
+      // Get user metadata
+      const metadata = user.user_metadata;
+      
+      setProfile({
+        full_name: metadata?.full_name || user.email?.split('@')[0] || "User",
+        email: user.email || "",
+        phone: metadata?.phone || "",
+        aadhar_number: metadata?.aadhar_number || "",
+        pan_number: metadata?.pan_number || ""
+      });
+      
+      setEditedProfile({
+        full_name: metadata?.full_name || user.email?.split('@')[0] || "User",
+        email: user.email || "",
+        phone: metadata?.phone || "",
+        aadhar_number: metadata?.aadhar_number || "",
+        pan_number: metadata?.pan_number || ""
+      });
     }
-    setEditedProfile(profile);
     setIsLoading(false);
-  }, []);
+  }, [user]);
 
   const handleSave = async () => {
     try {
@@ -60,13 +75,6 @@ const Profile = () => {
 
       // Update local profile state
       setProfile(editedProfile);
-      
-      // Save to localStorage for persistence across pages
-      localStorage.setItem("userProfile", JSON.stringify(editedProfile));
-      
-      // Save name separately for easy access from Dashboard
-      localStorage.setItem("userName", editedProfile.full_name);
-      
       setIsEditing(false);
       
       toast({
@@ -108,11 +116,16 @@ const Profile = () => {
           <BackButton />
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-primary">Profile Details</h1>
-            {!isEditing && (
-              <Button onClick={() => setIsEditing(true)} variant="outline">
-                Edit Profile
+            <div className="flex gap-2">
+              {!isEditing && (
+                <Button onClick={() => setIsEditing(true)} variant="outline">
+                  Edit Profile
+                </Button>
+              )}
+              <Button onClick={signOut} variant="destructive">
+                Logout
               </Button>
-            )}
+            </div>
           </div>
           {isLoading ? (
             <div className="flex items-center justify-center p-8">
@@ -142,18 +155,9 @@ const Profile = () => {
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    {isEditing ? (
-                      <Input
-                        type="email"
-                        value={editedProfile.email || ''}
-                        onChange={(e) => handleChange('email', e.target.value)}
-                        placeholder="Enter your email"
-                      />
-                    ) : (
-                      <div className="p-2 bg-muted rounded-md">
-                        {profile.email || 'Not provided'}
-                      </div>
-                    )}
+                    <div className="p-2 bg-muted rounded-md">
+                      {profile.email || 'Not provided'}
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
