@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state listener
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session);
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
@@ -63,10 +64,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             full_name: fullName,
           },
+          // This helps bypass email confirmation if it's enabled
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       });
 
       if (error) {
+        console.error("Registration error:", error.message);
         toast({
           title: "Registration failed",
           description: error.message,
@@ -75,9 +79,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error };
       }
 
+      console.log("Registration success:", data);
       toast({
         title: "Registration successful",
-        description: "You can now log in with your credentials",
+        description: "Please check your email for confirmation or proceed to login",
       });
       
       navigate("/login");
@@ -97,6 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
+        console.error("Login error:", error.message);
         toast({
           title: "Login failed",
           description: error.message,
@@ -105,6 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error };
       }
 
+      console.log("Login success:", data);
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -119,15 +126,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     setIsLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout error:", error.message);
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setUser(null);
+      setSession(null);
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully",
+      });
+      navigate("/login");
+    }
     setIsLoading(false);
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-    navigate("/login");
   };
 
   return (
