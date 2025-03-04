@@ -13,6 +13,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<{ error: any }>;
   deleteAccount: () => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -261,6 +262,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updatePassword = async (password: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase.auth.updateUser({ 
+        password: password 
+      });
+
+      if (error) {
+        console.error("Password update error:", error.message);
+        toast({
+          title: "Password update failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error };
+      }
+
+      toast({
+        title: "Password updated successfully",
+        description: "Your password has been updated",
+      });
+      
+      return { error: null };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{ 
@@ -271,7 +301,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signIn, 
         signOut, 
         resendVerificationEmail,
-        deleteAccount
+        deleteAccount,
+        updatePassword
       }}
     >
       {children}
