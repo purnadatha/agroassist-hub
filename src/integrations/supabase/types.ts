@@ -125,6 +125,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_user_data: {
+        Args: {
+          user_id: string
+        }
+        Returns: undefined
+      }
+      delete_user_with_data: {
+        Args: {
+          user_id: string
+        }
+        Returns: string
+      }
       get_secret: {
         Args: {
           secret_name: string

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -13,6 +12,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<{ error: any }>;
+  deleteAccount: () => Promise<{ error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,7 +25,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for active session on initial load
     const getSession = async () => {
       setIsLoading(true);
       const { data, error } = await supabase.auth.getSession();
@@ -40,7 +39,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     getSession();
 
-    // Set up auth state listener
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       setSession(session);
@@ -48,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     });
 
-    // Cleanup function
     return () => {
       data.subscription.unsubscribe();
     };
@@ -65,7 +62,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             full_name: fullName,
           },
-          // This helps bypass email confirmation if it's enabled
           emailRedirectTo: `${window.location.origin}/login`,
         },
       });
@@ -83,14 +79,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Registration success:", data);
       
       if (!data.session) {
-        // User needs to verify email
         toast({
           title: "Registration successful",
           description: "Please check your email for confirmation or use the 'Resend verification email' option below the login form if you didn't receive it.",
           duration: 6000,
         });
       } else {
-        // Auto sign-in successful (email verification might be disabled)
         toast({
           title: "Registration successful",
           description: "You have been automatically logged in!",
@@ -118,7 +112,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) {
         console.error("Login error:", error.message);
         
-        // Special handling for unverified email
         if (error.message.includes("Email not confirmed") || 
             error.message.includes("Invalid login credentials")) {
           toast({
@@ -206,6 +199,68 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
   };
 
+  const deleteAccount = async () => {
+    try {
+      setIsLoading(true);
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to delete your account",
+          variant: "destructive",
+        });
+        return { error: new Error("Not authenticated") };
+      }
+
+      const { data, error } = await supabase.rpc('delete_user_with_data', {
+        user_id: user.id
+      });
+
+      if (error) {
+        console.error("Account deletion error:", error.message);
+        toast({
+          title: "Account deletion failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error };
+      }
+
+      if (data && data.includes("Error")) {
+        console.error("Account deletion issue:", data);
+        toast({
+          title: "Account deletion issue",
+          description: data,
+          variant: "destructive",
+        });
+        return { error: new Error(data) };
+      }
+
+      console.log("Account deleted:", data);
+      
+      setUser(null);
+      setSession(null);
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account has been successfully deleted",
+      });
+      
+      navigate("/");
+      return { error: null };
+    } catch (error: any) {
+      console.error("Unexpected error during account deletion:", error.message);
+      toast({
+        title: "Account deletion failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{ 
@@ -215,7 +270,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signUp, 
         signIn, 
         signOut, 
-        resendVerificationEmail 
+        resendVerificationEmail,
+        deleteAccount
       }}
     >
       {children}
