@@ -15,6 +15,7 @@ import Loans from "./pages/Loans";
 import CropRecommendation from "./pages/CropRecommendation";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
+import ConfirmEmailChange from "./pages/ConfirmEmailChange";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
                 <Route path="reset-password" element={<ResetPassword />} />
+                <Route path="confirm-email" element={<ConfirmEmailChange />} />
                 <Route path="dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
