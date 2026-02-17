@@ -89,9 +89,9 @@ const SellingForm = () => {
         .insert({
           product_name: values.productName,
           category: values.category,
-          quantity: values.quantity,
+          quantity: parseInt(values.quantity),
           unit: values.unit,
-          price: values.price,
+          price: parseFloat(values.price),
           description: values.description,
           location: values.location,
           image_url: imageUrl,

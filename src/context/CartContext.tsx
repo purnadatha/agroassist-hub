@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface CartItem {
   id: string;
   name: string;
-  price: string;
+  price: number;
   image?: string | null;
   quantity: number;
   type: 'product' | 'tool'; // Differentiate between products and tools
@@ -105,7 +105,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const getTotalPrice = () => {
     return items.reduce((total, item) => {
-      const itemPrice = parseFloat(item.price) || 0;
+      const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
       return total + (itemPrice * item.quantity);
     }, 0);
   };

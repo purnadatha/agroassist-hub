@@ -18,9 +18,9 @@ export interface Product {
   user_id?: string;
   product_name: string;
   category: string;
-  quantity: string;
+  quantity: number;
   unit: string;
-  price: string;
+  price: number;
   description: string;
   location: string;
   image_url: string | null;
