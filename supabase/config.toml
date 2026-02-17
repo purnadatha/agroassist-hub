@@ -1,7 +1,1 @@
-project_id = "ppvpakkqegbnfwmdnzgi"
-
-[functions.get-weather]
-verify_jwt = false
-
-[functions.get-weather-key]
-verify_jwt = false
+project_id = "exwjyfmxcxxumvhkfrls"
