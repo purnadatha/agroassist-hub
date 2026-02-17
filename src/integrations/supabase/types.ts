@@ -14,13 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          price: number | null
+          product_name: string
+          quantity: number | null
+          unit: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          price?: number | null
+          product_name: string
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          price?: number | null
+          product_name?: string
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          aadhar_number: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          pan_number: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          aadhar_number?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          pan_number?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aadhar_number?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          pan_number?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          price_per_day: number | null
+          rental_duration: string | null
+          tool_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          price_per_day?: number | null
+          rental_duration?: string | null
+          tool_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          price_per_day?: number | null
+          rental_duration?: string | null
+          tool_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_user_with_data: { Args: { user_id: string }; Returns: string }
+      get_secret: { Args: { secret_name: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
