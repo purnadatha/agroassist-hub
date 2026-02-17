@@ -33,39 +33,12 @@ export const WeatherWidget = () => {
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { data: { api_key }, error: secretError } = await supabase.functions.invoke('get-weather-key', {
-              body: { key: 'MAPBOX_ACCESS_TOKEN' }
-            });
-
-            if (secretError) throw secretError;
-
-            const response = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${api_key}`,
-              { headers: { 'Accept': 'application/json' } }
-            );
-            
-            if (!response.ok) {
-              throw new Error('Failed to fetch location name');
-            }
-            
-            const data = await response.json();
-            const placeName = data.features[0]?.place_name || "Current Location";
-            
-            setLocation({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              locationName: placeName,
-            });
-          } catch (error) {
-            console.error("Error fetching location name:", error);
-            setLocation({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              locationName: "Current Location",
-            });
-          }
+        (position) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            locationName: "Current Location",
+          });
         },
         (error) => {
           console.error("Error getting location:", error);

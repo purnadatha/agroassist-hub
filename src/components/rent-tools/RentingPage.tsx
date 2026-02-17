@@ -13,7 +13,7 @@ interface Tool {
   tool_name: string;
   category: string;
   rental_duration: string;
-  price_per_day: string;
+  price_per_day: number;
   description: string;
   location: string;
   image_url: string | null;

@@ -10,3 +10,16 @@ export const rentingFormSchema = z.object({
 });
 
 export type RentingFormValues = z.infer<typeof rentingFormSchema>;
+
+export interface Tool {
+  id: string;
+  user_id?: string;
+  tool_name: string;
+  category: string;
+  price_per_day: number;
+  rental_duration: string;
+  description: string;
+  location: string;
+  image_url: string | null;
+  created_at?: string;
+}

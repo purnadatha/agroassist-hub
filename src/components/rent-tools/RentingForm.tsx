@@ -88,7 +88,7 @@ const RentingForm = () => {
           tool_name: values.toolName,
           category: values.category,
           rental_duration: values.rentalDuration,
-          price_per_day: values.pricePerDay,
+          price_per_day: parseFloat(values.pricePerDay),
           description: values.description,
           location: values.location,
           image_url: imageUrl,
