@@ -40,7 +40,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
-                <Route index element={<Welcome />} />
+                <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
                 <Route path="reset-password" element={<ResetPassword />} />
